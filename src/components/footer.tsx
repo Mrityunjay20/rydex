@@ -14,7 +14,7 @@ export function Footer() {
                 <Car className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold tracking-tight">
-                Ryder<span className="text-blue-600">X</span>
+                Ryde<span className="text-blue-600">X</span>
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -91,10 +91,10 @@ export function Footer() {
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <a
-                  href="mailto:hello@ryderx.in"
+                  href="mailto:hello@rydex.in"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  hello@ryderx.in
+                  hello@rydex.in
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} RyderX. All rights reserved.
+            &copy; {new Date().getFullYear()} RydeX. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link

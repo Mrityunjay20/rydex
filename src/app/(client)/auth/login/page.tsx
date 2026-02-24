@@ -22,7 +22,7 @@ export default function LoginPage() {
     setIsLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
 
-    if (email === "admin@ryderx.in") {
+    if (email === "admin@rydex.in") {
       router.push("/admin");
     } else {
       router.push("/account");
@@ -38,7 +38,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Sign in to your RyderX account
+            Sign in to your RydeX account
           </p>
         </CardHeader>
         <CardContent>
@@ -144,7 +144,7 @@ export default function LoginPage() {
           </p>
 
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Demo: Use <strong>admin@ryderx.in</strong> for admin access
+            Demo: Use <strong>admin@rydex.in</strong> for admin access
           </p>
         </CardContent>
       </Card>

@@ -10,11 +10,11 @@ export default function AboutPage() {
       {/* Hero */}
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          About <span className="text-blue-600">RyderX</span>
+          About <span className="text-blue-600">RydeX</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground leading-relaxed">
           We&apos;re on a mission to make self-drive car rentals in Delhi NCR
-          simple, affordable, and enjoyable. Founded in 2023, RyderX has quickly
+          simple, affordable, and enjoyable. Founded in 2023, RydeX has quickly
           become the go-to choice for thousands of drivers across the region.
         </p>
       </div>
@@ -39,7 +39,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold mb-4">Our Story</h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              RyderX was born from a simple idea: renting a car in Delhi NCR
+              RydeX was born from a simple idea: renting a car in Delhi NCR
               shouldn&apos;t be complicated. Our founders, avid travelers
               themselves, faced the frustration of opaque pricing, poorly
               maintained vehicles, and cumbersome booking processes.
@@ -54,7 +54,7 @@ export default function AboutPage() {
             <p>
               Whether you need a compact hatchback for city errands, a sturdy
               SUV for a weekend getaway, or a luxury sedan for a special
-              occasion, RyderX has you covered.
+              occasion, RydeX has you covered.
             </p>
           </div>
         </div>

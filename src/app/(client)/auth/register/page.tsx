@@ -31,7 +31,7 @@ export default function RegisterPage() {
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Join RyderX and start driving today
+            Join RydeX and start driving today
           </p>
         </CardHeader>
         <CardContent>

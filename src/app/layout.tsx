@@ -10,8 +10,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "RyderX - Premium Car Rentals in Delhi NCR",
-    template: "%s | RyderX",
+    default: "RydeX - Premium Car Rentals in Delhi NCR",
+    template: "%s | RydeX",
   },
   description:
     "Premium self-drive car rental service in Delhi NCR. Choose from SUVs, Sedans, Hatchbacks & Luxury cars at affordable prices.",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "self drive car Delhi NCR",
     "car hire Gurugram",
     "rent a car Noida",
-    "RyderX",
+    "RydeX",
   ],
 };
 

@@ -162,7 +162,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Why Choose RyderX?
+              Why Choose RydeX?
             </h2>
             <p className="mt-3 text-muted-foreground">
               We go the extra mile so you can too

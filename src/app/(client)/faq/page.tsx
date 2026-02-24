@@ -82,7 +82,7 @@ const faqs = [
       },
       {
         q: "How do I contact support?",
-        a: "You can reach us 24/7 via WhatsApp, phone (+91 12345 67890), email (support@ryderx.in), or through the contact form on our website.",
+        a: "You can reach us 24/7 via WhatsApp, phone (+91 12345 67890), email (support@rydex.in), or through the contact form on our website.",
       },
     ],
   },
@@ -99,7 +99,7 @@ export default function FAQPage() {
           Frequently Asked Questions
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          Everything you need to know about renting with RyderX
+          Everything you need to know about renting with RydeX
         </p>
       </div>
 

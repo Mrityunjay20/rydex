@@ -256,7 +256,7 @@ export const testimonials = [
     name: "Rahul Sharma",
     role: "Business Traveler",
     content:
-      "RyderX made my Delhi business trip so easy. Booked a Honda City in minutes, and the car was spotless. Will definitely use again!",
+      "RydeX made my Delhi business trip so easy. Booked a Honda City in minutes, and the car was spotless. Will definitely use again!",
     rating: 5,
     avatar: "RS",
   },
@@ -283,7 +283,7 @@ export const testimonials = [
     name: "Sneha Reddy",
     role: "Corporate Client",
     content:
-      "We use RyderX for all our corporate travel needs in Delhi NCR. Professional service, premium cars, and competitive rates.",
+      "We use RydeX for all our corporate travel needs in Delhi NCR. Professional service, premium cars, and competitive rates.",
     rating: 5,
     avatar: "SR",
   },

@@ -46,7 +46,7 @@ export default function ContactPage() {
               icon: MapPin,
               title: "Visit Us",
               lines: [
-                "RyderX HQ",
+                "RydeX HQ",
                 "Connaught Place",
                 "New Delhi, 110001",
               ],
@@ -59,7 +59,7 @@ export default function ContactPage() {
             {
               icon: Mail,
               title: "Email Us",
-              lines: ["hello@ryderx.in", "support@ryderx.in"],
+              lines: ["hello@rydex.in", "support@rydex.in"],
             },
             {
               icon: Clock,
@@ -204,7 +204,7 @@ export default function ContactPage() {
           allowFullScreen
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          title="RyderX Location"
+          title="RydeX Location"
         />
       </div>
     </div>

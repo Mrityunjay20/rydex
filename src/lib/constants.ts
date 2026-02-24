@@ -1,7 +1,7 @@
-export const SITE_NAME = "RyderX";
+export const SITE_NAME = "RydeX";
 export const SITE_DESCRIPTION =
   "Premium car rental service in Delhi NCR. Choose from our wide range of vehicles for self-drive rentals at affordable prices.";
-export const SITE_URL = "https://ryderx.vercel.app";
+export const SITE_URL = "https://rydex.vercel.app";
 
 export const NAV_LINKS = [
   { label: "Home", href: "/" },

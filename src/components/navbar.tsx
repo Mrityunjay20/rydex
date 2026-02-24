@@ -19,7 +19,7 @@ export function Navbar() {
             <Car className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold tracking-tight">
-            Ryder<span className="text-blue-600">X</span>
+            Ryde<span className="text-blue-600">X</span>
           </span>
         </Link>
 
@@ -67,7 +67,7 @@ export function Navbar() {
                   <Car className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <span className="text-xl font-bold tracking-tight">
-                  Ryder<span className="text-blue-600">X</span>
+                  Ryde<span className="text-blue-600">X</span>
                 </span>
               </Link>
               {NAV_LINKS.map((link) => (

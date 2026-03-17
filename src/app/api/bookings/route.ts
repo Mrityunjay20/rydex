@@ -40,12 +40,13 @@ export async function POST(request: NextRequest) {
       dropLocation,
       totalAmount,
       addOns,
+      razorpayOrderId,
     } = body;
 
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from("Booking")
       .insert({
-        userId,
+        userId: userId || null,
         vehicleId,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
@@ -53,20 +54,20 @@ export async function POST(request: NextRequest) {
         dropLocation,
         totalAmount,
         addOns: addOns || [],
-        status: "CONFIRMED",
-        paymentStatus: "PAID",
+        status: "PENDING",
+        paymentStatus: "PENDING",
       })
       .select("*, vehicle:Vehicle(*)")
       .single();
 
     if (bookingError) throw bookingError;
 
-    // Create payment record
     await supabaseAdmin.from("Payment").insert({
       bookingId: booking.id,
       amount: totalAmount,
       method: "ONLINE",
-      status: "PAID",
+      razorpayOrderId: razorpayOrderId || null,
+      status: "PENDING",
     });
 
     return NextResponse.json(booking, { status: 201 });

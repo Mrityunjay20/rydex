@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { vehicles } from "@/lib/mock-data";
+import { Vehicle } from "@/lib/types";
 
 export default function VehicleDetailPage({
   params,
@@ -26,8 +26,36 @@ export default function VehicleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const vehicle = vehicles.find((v) => v.id === id);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      try {
+        const response = await fetch(`/api/vehicles/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVehicle(data);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicle();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-sm text-muted-foreground">Loading vehicle details...</p>
+      </div>
+    );
+  }
 
   if (!vehicle) {
     return (

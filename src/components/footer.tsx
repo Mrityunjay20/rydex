@@ -132,6 +132,14 @@ export function Footer() {
             >
               Cancellation Policy
             </Link>
+            <a
+              href="/gst-certificate.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              GST Certificate
+            </a>
           </div>
         </div>
       </div>

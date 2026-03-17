@@ -1,0 +1,30 @@
+-- Add default timestamps for all tables
+ALTER TABLE "Booking" 
+ALTER COLUMN "updatedAt" SET DEFAULT NOW();
+
+ALTER TABLE "Booking" 
+ALTER COLUMN "createdAt" SET DEFAULT NOW();
+
+ALTER TABLE "Vehicle" 
+ALTER COLUMN "updatedAt" SET DEFAULT NOW();
+
+ALTER TABLE "Vehicle" 
+ALTER COLUMN "createdAt" SET DEFAULT NOW();
+
+ALTER TABLE "Payment" 
+ALTER COLUMN "updatedAt" SET DEFAULT NOW();
+
+ALTER TABLE "Payment" 
+ALTER COLUMN "createdAt" SET DEFAULT NOW();
+
+ALTER TABLE "User" 
+ALTER COLUMN "updatedAt" SET DEFAULT NOW();
+
+ALTER TABLE "User" 
+ALTER COLUMN "createdAt" SET DEFAULT NOW();
+
+ALTER TABLE "Review" 
+ALTER COLUMN "updatedAt" SET DEFAULT NOW();
+
+ALTER TABLE "Review" 
+ALTER COLUMN "createdAt" SET DEFAULT NOW();

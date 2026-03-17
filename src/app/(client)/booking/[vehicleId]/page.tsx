@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -27,8 +27,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { vehicles } from "@/lib/mock-data";
+import { Vehicle } from "@/lib/types";
 import { LOCATIONS, ADD_ONS } from "@/lib/constants";
+import { useRazorpay } from "@/hooks/useRazorpay";
 
 export default function BookingPage({
   params,
@@ -37,7 +38,8 @@ export default function BookingPage({
 }) {
   const { vehicleId } = use(params);
   const router = useRouter();
-  const vehicle = vehicles.find((v) => v.id === vehicleId);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("10:00");
@@ -47,6 +49,34 @@ export default function BookingPage({
   const [dropLocation, setDropLocation] = useState("");
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      try {
+        const response = await fetch(`/api/vehicles/${vehicleId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVehicle(data);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicle();
+  }, [vehicleId]);
+  const isRazorpayLoaded = useRazorpay();
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-sm text-muted-foreground">Loading vehicle details...</p>
+      </div>
+    );
+  }
 
   if (!vehicle) {
     return (
@@ -111,10 +141,123 @@ export default function BookingPage({
   };
 
   const handleSubmit = async () => {
+    if (!startDate || !endDate || !pickupLocation || !dropLocation) {
+      alert("Please fill in all required fields (dates and locations).");
+      return;
+    }
+
+    if (!isRazorpayLoaded) {
+      alert("Payment system is loading. Please wait a moment and try again.");
+      return;
+    }
+
+    if (typeof window === "undefined" || !window.Razorpay) {
+      alert("Payment system not available. Please refresh the page and try again.");
+      return;
+    }
+
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    router.push(`/booking/confirmation?vehicle=${vehicle.id}&total=${calculateTotal()}`);
+    
+    try {
+      const totalAmount = calculateTotal();
+      
+      if (totalAmount <= 0) {
+        throw new Error("Invalid booking amount");
+      }
+      
+      const orderResponse = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: totalAmount,
+          receipt: `booking_${Date.now()}`,
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create payment order");
+      }
+
+      const orderData = await orderResponse.json();
+
+      const bookingResponse = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicleId: vehicle.id,
+          startDate: `${startDate}T${startTime}`,
+          endDate: `${endDate}T${endTime}`,
+          pickupLocation,
+          dropLocation,
+          totalAmount,
+          addOns: selectedAddOns,
+          razorpayOrderId: orderData.orderId,
+        }),
+      });
+
+      if (!bookingResponse.ok) {
+        throw new Error("Failed to create booking");
+      }
+
+      const booking = await bookingResponse.json();
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "RydeX",
+        description: `Booking for ${vehicle.name}`,
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            const verifyResponse = await fetch("/api/payment/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                bookingId: booking.id,
+              }),
+            });
+
+            if (verifyResponse.ok) {
+              router.push(
+                `/booking/confirmation?vehicle=${vehicle.id}&total=${totalAmount}&bookingId=${booking.id}`
+              );
+            } else {
+              alert("Payment verification failed. Please contact support.");
+              setIsSubmitting(false);
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            alert("Payment verification failed. Please contact support.");
+            setIsSubmitting(false);
+          }
+        },
+        prefill: {
+          name: "Customer Name",
+          email: "customer@example.com",
+          contact: "9999999999",
+        },
+        theme: {
+          color: "#2563eb",
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      alert(`Failed to initiate payment: ${errorMessage}. Please try again.`);
+      setIsSubmitting(false);
+    }
   };
 
   const today = new Date().toISOString().split("T")[0];

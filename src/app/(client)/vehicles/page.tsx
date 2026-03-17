@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { VehicleCard } from "@/components/vehicle-card";
-import { vehicles } from "@/lib/mock-data";
+import { Vehicle } from "@/lib/types";
 import {
   VEHICLE_TYPES,
   FUEL_TYPES,
@@ -23,12 +23,37 @@ import {
 } from "@/lib/constants";
 
 export default function VehiclesPage() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>("all");
   const [fuelType, setFuelType] = useState<string>("all");
   const [transmission, setTransmission] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("popular");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch("/api/vehicles");
+      console.log("Vehicles API response status:", response.status);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Vehicles data received:", data);
+        console.log("Number of vehicles:", data.length);
+        setVehicles(data);
+      } else {
+        console.error("Failed to fetch vehicles:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const activeFilters = [type, fuelType, transmission].filter(
     (f) => f !== "all"
@@ -73,7 +98,7 @@ export default function VehiclesPage() {
     }
 
     return result;
-  }, [search, type, fuelType, transmission, sortBy]);
+  }, [vehicles, search, type, fuelType, transmission, sortBy]);
 
   const clearFilters = () => {
     setType("all");
@@ -245,7 +270,12 @@ export default function VehiclesPage() {
             </div>
           )}
 
-          {filteredVehicles.length > 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              <p className="mt-4 text-sm text-muted-foreground">Loading vehicles...</p>
+            </div>
+          ) : filteredVehicles.length > 0 ? (
             <>
               <p className="mb-4 text-sm text-muted-foreground">
                 Showing {filteredVehicles.length} vehicle

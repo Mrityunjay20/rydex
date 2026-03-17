@@ -7,82 +7,108 @@ export const metadata = { title: "FAQ" };
 
 const faqs = [
   {
-    category: "Booking",
+    category: "About Rydex",
     questions: [
       {
-        q: "How do I book a vehicle?",
-        a: "Browse our vehicle collection, select your preferred car, choose your dates and pickup location, and complete the payment. You'll receive a confirmation email with all the details.",
+        q: "What is Rydex Car Private Limited?",
+        a: "Rydex Car Private Limited is a self-drive car rental company that allows customers to rent cars for personal or business use without the need for a chauffeur. Our unique feature is our Damage Protection Plan, which ensures peace of mind by covering accidental damages during your trip.",
       },
       {
-        q: "Can I modify my booking after confirmation?",
-        a: "Yes, you can modify your booking up to 12 hours before the pickup time. Changes to dates, location, or vehicle are subject to availability and price differences.",
+        q: "How is Rydex Car different from other self-drive car rental companies?",
+        a: "Unlike other car rental services, Rydex provides: Minimum Value Damage Protection Plan (covering damages during your trip), affordable pricing with no hidden charges, a wide variety of cars from hatchbacks to Top Rated SUVs & MUVs, and easy booking through app/website with flexible rental durations.",
       },
       {
-        q: "What is the minimum rental duration?",
-        a: "The minimum rental duration is 4 hours. For durations of 24 hours or more, daily pricing applies which is more economical.",
-      },
-      {
-        q: "Do I need to return the car to the same location?",
-        a: "Not necessarily. We support different pickup and drop-off locations across Delhi NCR. A nominal one-way fee may apply for different locations.",
+        q: "What types of cars are available at Rydex?",
+        a: "We provide a wide range of cars to suit every need: Hatchbacks (budget-friendly), Sedans (comfortable family rides), SUVs (long trips & adventure), and Luxury cars (premium experience).",
       },
     ],
   },
   {
-    category: "Payment & Pricing",
+    category: "Damage Protection Plan",
     questions: [
       {
-        q: "What payment methods do you accept?",
-        a: "We accept all major credit/debit cards, UPI, net banking, and popular wallets through Razorpay. Cash payments are not accepted.",
+        q: "What is the Damage Protection Plan?",
+        a: "Our Damage Protection Plan is designed to safeguard renters in case of accidental damage to the car during their trip. Instead of bearing the full repair cost, you only pay a minimum protection fee, and the rest is covered under our policy. This is unique to Rydex and ensures stress-free driving.",
       },
       {
-        q: "Is there a security deposit?",
-        a: "Yes, a refundable security deposit of ₹2,000–₹10,000 (depending on the vehicle) is held at the time of booking and refunded within 48 hours of return.",
-      },
-      {
-        q: "Are there any hidden charges?",
-        a: "No hidden charges. Our pricing is fully transparent — fuel, tolls, and parking during your rental are the only additional costs borne by you.",
-      },
-      {
-        q: "What is your cancellation policy?",
-        a: "Free cancellation up to 24 hours before pickup. Cancellations within 24 hours incur a 25% fee. No-shows are charged the full amount.",
+        q: "What happens if the car is damaged during my trip?",
+        a: "If you have opted for the Damage Protection Plan, you pay the minimum coverage amount. Without the plan, repair costs will be charged as per actual damages. In case of major accidents, insurance terms apply.",
       },
     ],
   },
   {
-    category: "Vehicle & Safety",
+    category: "Booking & Requirements",
     questions: [
       {
-        q: "What documents do I need?",
-        a: "You'll need a valid driving license, a government-issued ID (Aadhaar/Passport), and be at least 21 years old. International visitors need an International Driving Permit.",
+        q: "Who can rent a car from Rydex?",
+        a: "Anyone who meets the following conditions can rent: Minimum age of 21 years, must have a valid driving license (Indian or International), and must provide a valid ID proof (Aadhar/Passport/Company ID, etc.).",
       },
       {
-        q: "Are vehicles insured?",
-        a: "Yes, all our vehicles come with comprehensive insurance. You can also opt for our Premium Insurance add-on for zero-deductible coverage.",
+        q: "How do I book a car?",
+        a: "You can book easily through: Rydex Website (online booking), Rydex Mobile App, or Customer Support Line. Choose your car, select your rental duration, make payment, and your car will be ready at the pickup point.",
       },
       {
-        q: "What if the car breaks down?",
-        a: "We provide 24/7 roadside assistance. Call our support number and we'll send help immediately — or provide a replacement vehicle if needed.",
+        q: "What documents do I need to rent a car?",
+        a: "You'll need a valid driving license, any government-issued ID proof (Aadhar, Passport, Voter ID), and a security deposit (refundable) as per car category.",
       },
       {
-        q: "What is the fuel policy?",
-        a: "Vehicles are provided with a full tank (or full charge for EVs). Please return with the same fuel level. Alternatively, opt for our Full Fuel Package add-on.",
+        q: "Do you provide doorstep delivery and pickup?",
+        a: "Yes! Rydex offers doorstep delivery and pickup at select locations for customer convenience.",
+      },
+      {
+        q: "Can someone else drive the car I rented?",
+        a: "Only the registered renter/driver is allowed to drive. Additional drivers must be declared at the time of booking with valid documents.",
       },
     ],
   },
   {
-    category: "Account & Support",
+    category: "Pricing & Payment",
     questions: [
       {
-        q: "How do I track my booking?",
-        a: "Log in to your account to view all active and past bookings. Active bookings include a real-time countdown timer showing your remaining rental time.",
+        q: "What are the payment options available?",
+        a: "We accept: Debit/Credit Cards, UPI/Net Banking, Wallet Payments, and Corporate Billing (for business clients).",
       },
       {
-        q: "Can I extend my booking?",
-        a: "Yes! You can extend your booking directly from the booking timer page or by contacting our support team. Extension is subject to vehicle availability.",
+        q: "How does the security deposit work?",
+        a: "A refundable security deposit is collected at the time of booking. This amount is refunded after the trip, provided there are no violations or damages beyond the chosen plan.",
       },
       {
-        q: "How do I contact support?",
-        a: "You can reach us 24/7 via WhatsApp, phone (+91 12345 67890), email (support@rydex.in), or through the contact form on our website.",
+        q: "Is fuel included in the rental price?",
+        a: "Self-fuel option: Fuel level will be recorded at the time of pickup and must be returned with the same fuel level. Prepaid fuel option: Pay in advance for convenience.",
+      },
+      {
+        q: "Is there a kilometer limit on trips?",
+        a: "Yes, each booking comes with a free kilometer limit depending on the plan. Extra kilometers are charged at a fixed per-km rate.",
+      },
+      {
+        q: "What if I return the car late?",
+        a: "Late returns are charged on an hourly basis, and beyond a certain time, a full-day charge may apply.",
+      },
+    ],
+  },
+  {
+    category: "Rental Plans & Travel",
+    questions: [
+      {
+        q: "Do you offer long-term rentals?",
+        a: "Yes, Rydex offers daily, weekly, and monthly rental plans for both individuals and corporates.",
+      },
+      {
+        q: "Can I take the rented car outside the city or state?",
+        a: "Yes, you can travel intercity and interstate, but you must inform us during booking. Applicable tolls, permits, and state taxes will be your responsibility.",
+      },
+    ],
+  },
+  {
+    category: "Support & Assistance",
+    questions: [
+      {
+        q: "Do you offer roadside assistance?",
+        a: "Yes! Rydex provides 24/7 roadside assistance in case of breakdowns, flat tires, or emergencies during your trip.",
+      },
+      {
+        q: "How do I contact Rydex support?",
+        a: "Customer Care Number: 7303611292, Email: support@rydexcar.com, Website/App Chat Support.",
       },
     ],
   },

@@ -45,6 +45,25 @@ export default function AdminVehiclesPage() {
   const [search, setSearch] = useState("");
   const [vehicleList, setVehicleList] = useState(allVehicles);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    brand: "",
+    model: "",
+    year: new Date().getFullYear(),
+    type: "",
+    fuelType: "",
+    transmission: "",
+    seats: 5,
+    pricePerHour: 0,
+    pricePerDay: 0,
+    licensePlate: "",
+    location: "",
+    description: "",
+    images: [""],
+    features: [] as string[],
+    available: true,
+  });
 
   const filtered = vehicleList.filter(
     (v) =>
@@ -63,6 +82,51 @@ export default function AdminVehiclesPage() {
 
   const deleteVehicle = (id: string) => {
     setVehicleList((prev) => prev.filter((v) => v.id !== id));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/admin/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create vehicle");
+      }
+
+      const newVehicle = await response.json();
+      setVehicleList((prev) => [...prev, newVehicle]);
+      setDialogOpen(false);
+      setFormData({
+        name: "",
+        brand: "",
+        model: "",
+        year: new Date().getFullYear(),
+        type: "",
+        fuelType: "",
+        transmission: "",
+        seats: 5,
+        pricePerHour: 0,
+        pricePerDay: 0,
+        licensePlate: "",
+        location: "",
+        description: "",
+        images: [""],
+        features: [],
+        available: true,
+      });
+      alert("Vehicle added successfully!");
+    } catch (error) {
+      console.error("Error creating vehicle:", error);
+      alert("Failed to add vehicle. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -85,33 +149,48 @@ export default function AdminVehiclesPage() {
             <DialogHeader>
               <DialogTitle>Add New Vehicle</DialogTitle>
             </DialogHeader>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setDialogOpen(false);
-              }}
-            >
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Vehicle Name</Label>
-                  <Input placeholder="e.g., Hyundai Creta" />
+                  <Input
+                    placeholder="e.g., Hyundai Creta"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Brand</Label>
-                  <Input placeholder="e.g., Hyundai" />
+                  <Input
+                    placeholder="e.g., Hyundai"
+                    value={formData.brand}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Model</Label>
-                  <Input placeholder="e.g., Creta SX(O)" />
+                  <Input
+                    placeholder="e.g., Creta SX(O)"
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Year</Label>
-                  <Input type="number" placeholder="2024" />
+                  <Input
+                    type="number"
+                    placeholder="2024"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Type</Label>
-                  <Select>
+                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -126,7 +205,7 @@ export default function AdminVehiclesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Fuel Type</Label>
-                  <Select>
+                  <Select value={formData.fuelType} onValueChange={(value) => setFormData({ ...formData, fuelType: value })} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select fuel" />
                     </SelectTrigger>
@@ -141,7 +220,7 @@ export default function AdminVehiclesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Transmission</Label>
-                  <Select>
+                  <Select value={formData.transmission} onValueChange={(value) => setFormData({ ...formData, transmission: value })} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
@@ -156,23 +235,51 @@ export default function AdminVehiclesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Seats</Label>
-                  <Input type="number" placeholder="5" />
+                  <Input
+                    type="number"
+                    placeholder="5"
+                    value={formData.seats}
+                    onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Price per Hour (₹)</Label>
-                  <Input type="number" placeholder="250" />
+                  <Input
+                    type="number"
+                    placeholder="250"
+                    value={formData.pricePerHour}
+                    onChange={(e) => setFormData({ ...formData, pricePerHour: parseFloat(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Price per Day (₹)</Label>
-                  <Input type="number" placeholder="3000" />
+                  <Input
+                    type="number"
+                    placeholder="3000"
+                    value={formData.pricePerDay}
+                    onChange={(e) => setFormData({ ...formData, pricePerDay: parseFloat(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>License Plate</Label>
-                  <Input placeholder="DL01XX1234" />
+                  <Input
+                    placeholder="DL01XX1234"
+                    value={formData.licensePlate}
+                    onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Location</Label>
-                  <Input placeholder="Connaught Place, Delhi" />
+                  <Input
+                    placeholder="Connaught Place, Delhi"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -180,11 +287,19 @@ export default function AdminVehiclesPage() {
                 <Textarea
                   placeholder="Brief description of the vehicle..."
                   rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  required
                 />
               </div>
               <div className="space-y-2">
                 <Label>Image URL</Label>
-                <Input placeholder="https://..." />
+                <Input
+                  placeholder="https://..."
+                  value={formData.images[0]}
+                  onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
+                  required
+                />
               </div>
               <div className="flex gap-2 justify-end">
                 <Button
@@ -194,7 +309,9 @@ export default function AdminVehiclesPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Add Vehicle</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Adding..." : "Add Vehicle"}
+                </Button>
               </div>
             </form>
           </DialogContent>

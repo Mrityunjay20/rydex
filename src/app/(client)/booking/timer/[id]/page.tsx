@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { vehicles } from "@/lib/mock-data";
 
 export default function BookingTimerPage({
   params,
@@ -23,12 +22,29 @@ export default function BookingTimerPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const [booking, setBooking] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Demo: simulate a booking that started now and ends in 8 hours
-  const vehicle = vehicles[1]; // Hyundai Creta for demo
-  const now = new Date();
-  const endTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  const startTime = now;
+  useEffect(() => {
+    const fetchBooking = async () => {
+      try {
+        const response = await fetch(`/api/bookings/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBooking(data);
+        }
+      } catch (error) {
+        console.error("Error fetching booking:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, [id]);
+
+  const endTime = booking ? new Date(booking.endDate) : new Date();
+  const startTime = booking ? new Date(booking.startDate) : new Date();
 
   const [timeLeft, setTimeLeft] = useState({
     hours: 8,
@@ -68,6 +84,30 @@ export default function BookingTimerPage({
 
   const isWarning = timeLeft.hours === 0 && timeLeft.minutes <= 30;
   const isCritical = timeLeft.hours === 0 && timeLeft.minutes <= 15;
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-sm text-muted-foreground">Loading booking details...</p>
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <Car className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
+        <h1 className="text-2xl font-bold">Booking Not Found</h1>
+        <p className="mt-2 text-muted-foreground">
+          The booking you&apos;re looking for doesn&apos;t exist.
+        </p>
+        <Button className="mt-6" asChild>
+          <Link href="/account/bookings">View My Bookings</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -192,7 +232,7 @@ export default function BookingTimerPage({
             <Car className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Vehicle</p>
-              <p className="font-medium">{vehicle.name}</p>
+              <p className="font-medium">{booking.vehicle?.name || 'Vehicle'}</p>
             </div>
           </div>
           <Separator />
@@ -224,7 +264,7 @@ export default function BookingTimerPage({
               <p className="text-sm text-muted-foreground">
                 Pickup / Drop Location
               </p>
-              <p className="font-medium">Connaught Place, Delhi</p>
+              <p className="font-medium">{booking.pickupLocation} → {booking.dropLocation}</p>
             </div>
           </div>
           <Separator />

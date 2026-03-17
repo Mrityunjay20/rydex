@@ -19,9 +19,10 @@ function ConfirmationContent() {
   const searchParams = useSearchParams();
   const vehicleId = searchParams.get("vehicle");
   const total = searchParams.get("total");
+  const bookingIdParam = searchParams.get("bookingId");
   const vehicle = vehicles.find((v) => v.id === vehicleId);
 
-  const bookingId = `RX-${Date.now().toString(36).toUpperCase()}`;
+  const bookingId = bookingIdParam || `RX-${Date.now().toString(36).toUpperCase()}`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
@@ -83,7 +84,7 @@ function ConfirmationContent() {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link href="/booking/timer/demo">
+            <Link href={`/booking/timer/${bookingIdParam || 'demo'}`}>
               <Clock className="mr-2 h-4 w-4" />
               View Booking Timer
             </Link>

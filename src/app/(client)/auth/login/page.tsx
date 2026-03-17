@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,6 +27,29 @@ export default function LoginPage() {
       router.push("/admin");
     } else {
       router.push("/account");
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        console.error("Error signing in with Google:", error.message);
+        alert("Failed to sign in with Google. Please try again.");
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -104,14 +128,19 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="relative my-6">
+          {/* <div className="relative my-6">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
               or continue with
             </span>
           </div>
 
-          <Button variant="outline" className="w-full" disabled={isLoading}>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            disabled={isLoading}
+            onClick={handleGoogleSignIn}
+          >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -131,7 +160,7 @@ export default function LoginPage() {
               />
             </svg>
             Sign in with Google
-          </Button>
+          </Button> */}
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}

@@ -17,25 +17,40 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const logs: string[] = [];
+    logs.push("Login form submitted");
+    setDebugInfo([...logs]);
     setIsLoading(true);
 
     try {
+      logs.push("Creating Supabase client...");
+      setDebugInfo([...logs]);
       const supabase = createClient();
+      
+      logs.push("Supabase client created, attempting sign in...");
+      setDebugInfo([...logs]);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      logs.push(`Sign in response: ${error ? 'ERROR: ' + error.message : 'SUCCESS'}`);
+      setDebugInfo([...logs]);
+
       if (error) {
-        console.error("Error signing in:", error.message);
         alert(`Failed to sign in: ${error.message}`);
         setIsLoading(false);
         return;
       }
 
+      logs.push("Sign in successful, redirecting...");
+      setDebugInfo([...logs]);
+      
       // Check if user is admin
       if (email === "admin@rydex.in") {
         router.push("/admin");
@@ -44,8 +59,10 @@ export default function LoginPage() {
       }
       router.refresh();
     } catch (error) {
-      console.error("Unexpected error:", error);
-      alert("An unexpected error occurred. Please try again.");
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logs.push(`EXCEPTION: ${errorMsg}`);
+      setDebugInfo([...logs]);
+      alert(`An unexpected error occurred: ${errorMsg}`);
       setIsLoading(false);
     }
   };
@@ -195,6 +212,15 @@ export default function LoginPage() {
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Demo: Use <strong>admin@rydex.in</strong> for admin access
           </p>
+
+          {debugInfo.length > 0 && (
+            <div className="mt-4 rounded-lg bg-gray-100 p-3 text-xs">
+              <p className="font-semibold mb-2">Debug Info:</p>
+              {debugInfo.map((log, i) => (
+                <p key={i} className="text-gray-700">• {log}</p>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -21,12 +21,32 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
 
-    if (email === "admin@rydex.in") {
-      router.push("/admin");
-    } else {
-      router.push("/account");
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("Error signing in:", error.message);
+        alert(`Failed to sign in: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if user is admin
+      if (email === "admin@rydex.in") {
+        router.push("/admin");
+      } else {
+        router.push("/account");
+      }
+      router.refresh();
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
+      setIsLoading(false);
     }
   };
 

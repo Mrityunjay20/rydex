@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, Building, IndianRupee, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,75 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState<any>({
+    businessName: "RydeX",
+    contactEmail: "hello@rydex.in",
+    phone: "+91 12345 67890",
+    whatsapp: "+91 12345 67890",
+    address: "Connaught Place, New Delhi, 110001",
+    heroTagline: "Choose from 150+ well-maintained cars. Self-drive rentals starting at just ₹120/hour. Book in minutes, drive in style.",
+    minRentalHours: 4,
+    securityDeposit: 5000,
+    lateReturnPenalty: 150,
+    cancellationFee: 25,
+    weekendSurge: true,
+    holidayPricing: true,
+    autoApproveBookings: false,
+    is24x7: true,
+    gracePeriodMinutes: 60,
+    minAdvanceBookingHours: 2,
+    emailNotifications: true,
+    smsAlerts: true,
+    whatsappReminders: false,
+    timerExpiryAlerts: true,
+    locations: [],
+  });
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch("/api/admin/settings");
+      if (response.ok) {
+        const data = await response.json();
+        setSettings(data);
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        alert("Failed to save settings");
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      alert("Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateSetting = (key: string, value: any) => {
+    setSettings((prev: any) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -27,9 +92,9 @@ export default function AdminSettingsPage() {
             Manage your business configuration
           </p>
         </div>
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} disabled={saving}>
           <Save className="mr-2 h-4 w-4" />
-          {saved ? "Saved!" : "Save Changes"}
+          {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
         </Button>
       </div>
 
@@ -46,24 +111,34 @@ export default function AdminSettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Business Name</Label>
-                <Input defaultValue="RydeX" />
+                <Input value={settings.businessName} onChange={(e) => updateSetting('businessName', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Contact Email</Label>
-                <Input defaultValue="hello@rydex.in" />
+                <Input value={settings.contactEmail} onChange={(e) => updateSetting('contactEmail', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Phone Number</Label>
-                <Input defaultValue="+91 12345 67890" />
+                <Input value={settings.phone} onChange={(e) => updateSetting('phone', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>WhatsApp Number</Label>
-                <Input defaultValue="+91 12345 67890" />
+                <Input value={settings.whatsapp} onChange={(e) => updateSetting('whatsapp', e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Business Address</Label>
-              <Textarea defaultValue="Connaught Place, New Delhi, 110001" rows={2} />
+              <Textarea value={settings.address} onChange={(e) => updateSetting('address', e.target.value)} rows={2} />
+            </div>
+            <div className="space-y-2">
+              <Label>Homepage Hero Tagline</Label>
+              <Textarea 
+                value={settings.heroTagline} 
+                onChange={(e) => updateSetting('heroTagline', e.target.value)} 
+                rows={3}
+                placeholder="e.g., Choose from 150+ well-maintained cars. Self-drive rentals starting at just ₹120/hour."
+              />
+              <p className="text-xs text-muted-foreground">This text appears on the homepage hero section below the main title</p>
             </div>
           </CardContent>
         </Card>
@@ -80,19 +155,19 @@ export default function AdminSettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Minimum Rental Hours</Label>
-                <Input type="number" defaultValue="4" />
+                <Input type="number" value={settings.minRentalHours} onChange={(e) => updateSetting('minRentalHours', parseInt(e.target.value))} />
               </div>
               <div className="space-y-2">
                 <Label>Security Deposit (₹)</Label>
-                <Input type="number" defaultValue="5000" />
+                <Input type="number" value={settings.securityDeposit} onChange={(e) => updateSetting('securityDeposit', parseInt(e.target.value))} />
               </div>
               <div className="space-y-2">
                 <Label>Late Return Penalty (%)</Label>
-                <Input type="number" defaultValue="150" />
+                <Input type="number" value={settings.lateReturnPenalty} onChange={(e) => updateSetting('lateReturnPenalty', parseInt(e.target.value))} />
               </div>
               <div className="space-y-2">
                 <Label>Cancellation Fee (%)</Label>
-                <Input type="number" defaultValue="25" />
+                <Input type="number" value={settings.cancellationFee} onChange={(e) => updateSetting('cancellationFee', parseInt(e.target.value))} />
               </div>
             </div>
             <Separator />
@@ -104,7 +179,7 @@ export default function AdminSettingsPage() {
                     Apply 20% surge on Sat–Sun
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch checked={settings.weekendSurge} onCheckedChange={(checked) => updateSetting('weekendSurge', checked)} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -113,7 +188,7 @@ export default function AdminSettingsPage() {
                     Apply 30% surge on public holidays
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch checked={settings.holidayPricing} onCheckedChange={(checked) => updateSetting('holidayPricing', checked)} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -122,7 +197,7 @@ export default function AdminSettingsPage() {
                     Automatically confirm verified customer bookings
                   </p>
                 </div>
-                <Switch />
+                <Switch checked={settings.autoApproveBookings} onCheckedChange={(checked) => updateSetting('autoApproveBookings', checked)} />
               </div>
             </div>
           </CardContent>
@@ -137,18 +212,7 @@ export default function AdminSettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {[
-              "Connaught Place, Delhi",
-              "Aerocity, Delhi",
-              "Gurugram, Haryana",
-              "Noida, UP",
-              "Dwarka, Delhi",
-              "Karol Bagh, Delhi",
-              "Rajouri Garden, Delhi",
-              "Greater Noida, UP",
-              "Faridabad, Haryana",
-              "Ghaziabad, UP",
-            ].map((location) => (
+            {(settings.locations || []).map((location: string) => (
               <div
                 key={location}
                 className="flex items-center justify-between rounded-lg border p-3"
@@ -157,12 +221,49 @@ export default function AdminSettingsPage() {
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">{location}</span>
                 </div>
-                <Switch defaultChecked />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const newLocations = settings.locations.filter((l: string) => l !== location);
+                    updateSetting('locations', newLocations);
+                  }}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  Remove
+                </Button>
               </div>
             ))}
-            <Button variant="outline" size="sm" className="w-full mt-2">
-              + Add New Location
-            </Button>
+            <div className="flex gap-2">
+              <Input
+                id="newLocation"
+                placeholder="Enter new location..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.currentTarget;
+                    const value = input.value.trim();
+                    if (value && !settings.locations?.includes(value)) {
+                      updateSetting('locations', [...(settings.locations || []), value]);
+                      input.value = '';
+                    }
+                  }
+                }}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const input = document.getElementById('newLocation') as HTMLInputElement;
+                  const value = input?.value.trim();
+                  if (value && !settings.locations?.includes(value)) {
+                    updateSetting('locations', [...(settings.locations || []), value]);
+                    input.value = '';
+                  }
+                }}
+              >
+                Add
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -182,20 +283,20 @@ export default function AdminSettingsPage() {
                   Allow bookings and pickups at any time
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={settings.is24x7} onCheckedChange={(checked) => updateSetting('is24x7', checked)} />
             </div>
             <Separator />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Grace Period (minutes)</Label>
-                <Input type="number" defaultValue="60" />
+                <Input type="number" value={settings.gracePeriodMinutes} onChange={(e) => updateSetting('gracePeriodMinutes', parseInt(e.target.value))} />
                 <p className="text-xs text-muted-foreground">
                   Time allowed after booking ends before late charges
                 </p>
               </div>
               <div className="space-y-2">
                 <Label>Minimum Advance Booking (hours)</Label>
-                <Input type="number" defaultValue="2" />
+                <Input type="number" value={settings.minAdvanceBookingHours} onChange={(e) => updateSetting('minAdvanceBookingHours', parseInt(e.target.value))} />
                 <p className="text-xs text-muted-foreground">
                   How far in advance a booking must be made
                 </p>

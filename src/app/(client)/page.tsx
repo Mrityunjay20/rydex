@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -17,10 +20,42 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { VehicleCard } from "@/components/vehicle-card";
-import { vehicles, testimonials, stats, howItWorks } from "@/lib/mock-data";
+import { testimonials, stats, howItWorks } from "@/lib/mock-data";
 
 export default function Home() {
-  const featuredVehicles = vehicles.slice(0, 4);
+  const [featuredVehicles, setFeaturedVehicles] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>({
+    businessName: "RydeX",
+  });
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const response = await fetch("/api/vehicles");
+        if (response.ok) {
+          const data = await response.json();
+          setFeaturedVehicles(data.slice(0, 4));
+        }
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      }
+    };
+
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/admin/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+
+    fetchVehicles();
+    fetchSettings();
+  }, []);
 
   return (
     <>
@@ -34,16 +69,15 @@ export default function Home() {
               variant="secondary"
               className="mb-4 bg-blue-600/20 text-blue-300 border-blue-500/30"
             >
-              #1 Car Rental in Delhi NCR
+              Premium Car Rental Service
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               Drive Your Way
               <br />
-              <span className="text-blue-400">Across Delhi NCR</span>
+              <span className="text-blue-400">Anywhere You Go</span>
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-slate-300">
-              Choose from 150+ well-maintained cars. Self-drive rentals starting
-              at just ₹120/hour. Book in minutes, drive in style.
+              {settings.heroTagline || "Choose from 150+ well-maintained cars. Self-drive rentals starting at just ₹120/hour. Book in minutes, drive in style."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" className="text-base" asChild>
@@ -131,7 +165,7 @@ export default function Home() {
                 Featured Vehicles
               </h2>
               <p className="mt-3 text-muted-foreground">
-                Our most popular picks for Delhi NCR
+                Our most popular picks for you
               </p>
             </div>
             <Button variant="ghost" asChild className="hidden sm:flex">
@@ -162,7 +196,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Why Choose RydeX?
+              Why Choose {settings.businessName || "RydeX"}?
             </h2>
             <p className="mt-3 text-muted-foreground">
               We go the extra mile so you can too
@@ -192,7 +226,7 @@ export default function Home() {
                 icon: MapPin,
                 title: "Multiple Locations",
                 description:
-                  "Convenient pickup and drop-off points across Delhi, Gurugram, Noida & more.",
+                  "Convenient pickup and drop-off points at multiple locations.",
               },
             ].map((feature) => (
               <Card
@@ -222,7 +256,7 @@ export default function Home() {
               What Our Customers Say
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Trusted by thousands across Delhi NCR
+              Trusted by thousands of happy customers
             </p>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -268,7 +302,7 @@ export default function Home() {
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-lg text-slate-300">
             Book your ride now and experience the freedom of self-drive car
-            rentals in Delhi NCR.
+            rentals.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button

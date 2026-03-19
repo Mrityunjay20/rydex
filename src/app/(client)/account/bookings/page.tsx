@@ -1,69 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Car, Clock, MapPin, ChevronRight, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Car, Clock, MapPin, ChevronRight, Calendar, CalendarClock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const bookings = [
-  {
-    id: "RX-ABC123",
-    vehicle: "Hyundai Creta",
-    vehicleType: "SUV",
-    startDate: "Feb 10, 2025 10:00 AM",
-    endDate: "Feb 12, 2025 10:00 AM",
-    pickup: "Gurugram, Haryana",
-    drop: "Gurugram, Haryana",
-    status: "ACTIVE",
-    amount: 6000,
-  },
-  {
-    id: "RX-DEF456",
-    vehicle: "Swift Dzire",
-    vehicleType: "SEDAN",
-    startDate: "Jan 25, 2025 09:00 AM",
-    endDate: "Jan 26, 2025 09:00 AM",
-    pickup: "Connaught Place, Delhi",
-    drop: "Connaught Place, Delhi",
-    status: "COMPLETED",
-    amount: 1800,
-  },
-  {
-    id: "RX-GHI789",
-    vehicle: "Honda City",
-    vehicleType: "SEDAN",
-    startDate: "Jan 15, 2025 02:00 PM",
-    endDate: "Jan 15, 2025 10:00 PM",
-    pickup: "Noida, UP",
-    drop: "Noida, UP",
-    status: "COMPLETED",
-    amount: 1600,
-  },
-  {
-    id: "RX-JKL012",
-    vehicle: "Toyota Fortuner",
-    vehicleType: "SUV",
-    startDate: "Dec 24, 2024 08:00 AM",
-    endDate: "Dec 26, 2024 08:00 AM",
-    pickup: "Aerocity, Delhi",
-    drop: "Aerocity, Delhi",
-    status: "COMPLETED",
-    amount: 11000,
-  },
-  {
-    id: "RX-MNO345",
-    vehicle: "Maruti Baleno",
-    vehicleType: "HATCHBACK",
-    startDate: "Dec 10, 2024 10:00 AM",
-    endDate: "Dec 10, 2024 06:00 PM",
-    pickup: "Dwarka, Delhi",
-    drop: "Dwarka, Delhi",
-    status: "CANCELLED",
-    amount: 960,
-  },
-];
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
@@ -73,7 +19,7 @@ const statusColors: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-700",
 };
 
-function BookingCard({ booking }: { booking: (typeof bookings)[0] }) {
+function BookingCard({ booking }: { booking: any }) {
   return (
     <Card className="border shadow-sm">
       <CardContent className="p-4">
@@ -114,13 +60,21 @@ function BookingCard({ booking }: { booking: (typeof bookings)[0] }) {
             <p className="text-lg font-bold">
               ₹{booking.amount.toLocaleString("en-IN")}
             </p>
-            {booking.status === "ACTIVE" && (
-              <Button size="sm" asChild>
-                <Link href={`/booking/timer/demo`}>
-                  <Clock className="mr-1.5 h-3.5 w-3.5" />
-                  View Timer
-                </Link>
-              </Button>
+            {(booking.status === "ACTIVE" || booking.status === "CONFIRMED") && (
+              <div className="flex flex-col gap-2">
+                <Button size="sm" asChild>
+                  <Link href={`/booking/timer/${booking.id}`}>
+                    <Clock className="mr-1.5 h-3.5 w-3.5" />
+                    View Timer
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href={`/booking/timer/${booking.id}`}>
+                    <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
+                    Extend Booking
+                  </Link>
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -130,6 +84,66 @@ function BookingCard({ booking }: { booking: (typeof bookings)[0] }) {
 }
 
 export default function BookingsPage() {
+  const router = useRouter();
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          router.push("/auth/login");
+          return;
+        }
+
+        setUserEmail(user.email || "");
+
+        const response = await fetch("/api/bookings");
+        if (response.ok) {
+          const data = await response.json();
+          // Filter bookings by user email
+          const userBookings = data.filter((booking: any) => {
+            return booking.userEmail === user.email;
+          });
+          
+          // Transform to match component format
+          const formattedBookings = userBookings.map((booking: any) => ({
+            id: booking.id,
+            vehicle: booking.vehicle?.name || "Unknown Vehicle",
+            vehicleType: booking.vehicle?.type || "CAR",
+            startDate: new Date(booking.startDate).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            endDate: new Date(booking.endDate).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            pickup: booking.pickupLocation,
+            drop: booking.dropLocation,
+            status: booking.status,
+            amount: booking.totalAmount,
+          }));
+          
+          setBookings(formattedBookings);
+        }
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-20 text-center">
+        <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-sm text-muted-foreground">Loading your bookings...</p>
+      </div>
+    );
+  }
+
   const activeBookings = bookings.filter(
     (b) => b.status === "ACTIVE" || b.status === "CONFIRMED" || b.status === "PENDING"
   );

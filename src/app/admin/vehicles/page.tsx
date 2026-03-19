@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Plus,
@@ -43,9 +43,13 @@ import { VEHICLE_TYPES, FUEL_TYPES, TRANSMISSION_TYPES } from "@/lib/constants";
 
 export default function AdminVehiclesPage() {
   const [search, setSearch] = useState("");
-  const [vehicleList, setVehicleList] = useState(allVehicles);
+  const [vehicleList, setVehicleList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<any>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -64,6 +68,24 @@ export default function AdminVehiclesPage() {
     features: [] as string[],
     available: true,
   });
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch("/api/vehicles");
+      if (response.ok) {
+        const data = await response.json();
+        setVehicleList(data);
+      }
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = vehicleList.filter(
     (v) =>
@@ -84,24 +106,93 @@ export default function AdminVehiclesPage() {
     setVehicleList((prev) => prev.filter((v) => v.id !== id));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEdit = (vehicle: any) => {
+    setEditingVehicle(vehicle);
+    setFormData({
+      name: vehicle.name,
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year,
+      type: vehicle.type,
+      fuelType: vehicle.fuelType,
+      transmission: vehicle.transmission,
+      seats: vehicle.seats,
+      pricePerHour: vehicle.pricePerHour,
+      pricePerDay: vehicle.pricePerDay,
+      licensePlate: vehicle.licensePlate,
+      location: vehicle.location,
+      description: vehicle.description,
+      images: vehicle.images || [""],
+      features: vehicle.features || [],
+      available: vehicle.available,
+    });
+    setImagePreview(vehicle.images?.[0] || "");
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/admin/vehicles", {
-        method: "POST",
+      let imageUrl = "";
+
+      // Upload image if file is selected
+      if (imageFile) {
+        const formDataImage = new FormData();
+        formDataImage.append("file", imageFile);
+
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formDataImage,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.url;
+      }
+
+      // Create or update vehicle with image URL
+      const vehicleData = {
+        ...formData,
+        images: imageUrl ? [imageUrl] : formData.images,
+      };
+
+      const url = editingVehicle 
+        ? `/api/admin/vehicles/${editingVehicle.id}`
+        : "/api/admin/vehicles";
+      
+      const method = editingVehicle ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(vehicleData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create vehicle");
+        throw new Error(editingVehicle ? "Failed to update vehicle" : "Failed to create vehicle");
       }
 
-      const newVehicle = await response.json();
-      setVehicleList((prev) => [...prev, newVehicle]);
+      await response.json();
+      await fetchVehicles();
       setDialogOpen(false);
+      setEditingVehicle(null);
       setFormData({
         name: "",
         brand: "",
@@ -120,7 +211,9 @@ export default function AdminVehiclesPage() {
         features: [],
         available: true,
       });
-      alert("Vehicle added successfully!");
+      setImageFile(null);
+      setImagePreview("");
+      alert(editingVehicle ? "Vehicle updated successfully!" : "Vehicle added successfully!");
     } catch (error) {
       console.error("Error creating vehicle:", error);
       alert("Failed to add vehicle. Please try again.");
@@ -138,7 +231,32 @@ export default function AdminVehiclesPage() {
             Manage your fleet of {vehicleList.length} vehicles
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditingVehicle(null);
+            setImageFile(null);
+            setImagePreview("");
+            setFormData({
+              name: "",
+              brand: "",
+              model: "",
+              year: new Date().getFullYear(),
+              type: "",
+              fuelType: "",
+              transmission: "",
+              seats: 5,
+              pricePerHour: 0,
+              pricePerDay: 0,
+              licensePlate: "",
+              location: "",
+              description: "",
+              images: [""],
+              features: [],
+              available: true,
+            });
+          }
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -147,7 +265,7 @@ export default function AdminVehiclesPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add New Vehicle</DialogTitle>
+              <DialogTitle>{editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}</DialogTitle>
             </DialogHeader>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -293,13 +411,23 @@ export default function AdminVehiclesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Image URL</Label>
+                <Label>Vehicle Image</Label>
                 <Input
-                  placeholder="https://..."
-                  value={formData.images[0]}
-                  onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
-                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  required={!editingVehicle}
                 />
+                {imagePreview && (
+                  <div className="mt-2 relative aspect-video w-full max-w-xs rounded-lg overflow-hidden border">
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 justify-end">
                 <Button
@@ -310,7 +438,7 @@ export default function AdminVehiclesPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Adding..." : "Add Vehicle"}
+                  {isSubmitting ? (editingVehicle ? "Updating..." : "Adding...") : (editingVehicle ? "Update Vehicle" : "Add Vehicle")}
                 </Button>
               </div>
             </form>
@@ -371,7 +499,7 @@ export default function AdminVehiclesPage() {
                       <Eye className="mr-2 h-4 w-4" />
                       View
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEdit(vehicle)}>
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>

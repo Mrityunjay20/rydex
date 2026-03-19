@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Mail, Lock, Eye, EyeOff, Car, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +15,69 @@ export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    router.push("/account");
+
+    try {
+      // Check if email already exists
+      const checkResponse = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      if (checkResponse.ok) {
+        const { exists } = await checkResponse.json();
+        if (exists) {
+          alert("This email is already registered. Please use a different email or try logging in.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const supabase = createClient();
+      
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        // Check for duplicate email error from Supabase
+        if (error.message.includes("already registered") || error.message.includes("already exists")) {
+          alert("This email is already registered. Please use a different email or try logging in.");
+        } else {
+          alert(`Registration failed: ${error.message}`);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Success - redirect to account page
+      alert("Account created successfully! Please check your email to verify your account.");
+      router.push("/account");
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,13 +103,21 @@ export default function RegisterPage() {
                     id="firstName"
                     placeholder="John"
                     className="pl-9"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" required />
+                <Input 
+                  id="lastName" 
+                  placeholder="Doe" 
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  required 
+                />
               </div>
             </div>
             <div className="space-y-2">
@@ -63,6 +129,8 @@ export default function RegisterPage() {
                   type="email"
                   placeholder="you@example.com"
                   className="pl-9"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
               </div>
@@ -76,6 +144,8 @@ export default function RegisterPage() {
                   type="tel"
                   placeholder="+91 98765 43210"
                   className="pl-9"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   required
                 />
               </div>
@@ -89,6 +159,8 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a strong password"
                   className="pl-9 pr-9"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
                 />
                 <button

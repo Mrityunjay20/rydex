@@ -1,20 +1,40 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Car, Users, MapPin, Shield, Award, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { stats } from "@/lib/mock-data";
 
-export const metadata = { title: "About Us" };
-
 export default function AboutPage() {
+  const [settings, setSettings] = useState<any>({
+    businessName: "RydeX",
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/admin/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Hero */}
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          About <span className="text-blue-600">RydeX</span>
+          About <span className="text-blue-600">{settings.businessName || "RydeX"}</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground leading-relaxed">
           We&apos;re on a mission to make self-drive car rentals in Delhi NCR
-          simple, affordable, and enjoyable. Founded in 2023, RydeX has quickly
+          simple, affordable, and enjoyable. Founded in 2023, {settings.businessName || "RydeX"} has quickly
           become the go-to choice for thousands of drivers across the region.
         </p>
       </div>
@@ -39,7 +59,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold mb-4">Our Story</h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              RydeX was born from a simple idea: renting a car in Delhi NCR
+              {settings.businessName || "RydeX"} was born from a simple idea: renting a car in Delhi NCR
               shouldn&apos;t be complicated. Our founders, avid travelers
               themselves, faced the frustration of opaque pricing, poorly
               maintained vehicles, and cumbersome booking processes.
@@ -48,8 +68,7 @@ export default function AboutPage() {
               We set out to build a platform that puts the customer first —
               transparent pricing, meticulously maintained vehicles, and a
               booking experience that takes minutes, not hours. Today, we serve
-              thousands of happy customers every month across Delhi, Gurugram,
-              Noida, and beyond.
+              thousands of happy customers every month.
             </p>
             <p>
               Whether you need a compact hatchback for city errands, a sturdy
@@ -131,36 +150,6 @@ export default function AboutPage() {
         ))}
       </div>
 
-      {/* Service Areas */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-blue-950 p-8 text-center sm:p-12">
-        <h2 className="text-3xl font-bold text-white mb-3">
-          Serving Delhi NCR
-        </h2>
-        <p className="text-slate-300 mb-6">
-          Available across all major hubs in the National Capital Region
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {[
-            "New Delhi",
-            "Gurugram",
-            "Noida",
-            "Greater Noida",
-            "Faridabad",
-            "Ghaziabad",
-            "Dwarka",
-            "Aerocity",
-            "Connaught Place",
-            "Karol Bagh",
-          ].map((city) => (
-            <span
-              key={city}
-              className="rounded-full bg-white/10 px-4 py-1.5 text-sm text-white"
-            >
-              {city}
-            </span>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

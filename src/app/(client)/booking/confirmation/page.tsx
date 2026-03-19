@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -13,16 +13,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { vehicles } from "@/lib/mock-data";
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const vehicleId = searchParams.get("vehicle");
   const total = searchParams.get("total");
   const bookingIdParam = searchParams.get("bookingId");
-  const vehicle = vehicles.find((v) => v.id === vehicleId);
+  const [vehicle, setVehicle] = useState<any>(null);
 
   const bookingId = bookingIdParam || `RX-${Date.now().toString(36).toUpperCase()}`;
+
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      if (!vehicleId) return;
+      try {
+        const response = await fetch(`/api/vehicles/${vehicleId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVehicle(data);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle:", error);
+      }
+    };
+
+    fetchVehicle();
+  }, [vehicleId]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -38,86 +38,6 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-const bookings = [
-  {
-    id: "RX-XY1234",
-    customer: "Rahul Sharma",
-    email: "rahul@example.com",
-    phone: "+91 98765 43210",
-    vehicle: "Hyundai Creta",
-    startDate: "Feb 10, 2025",
-    endDate: "Feb 12, 2025",
-    pickup: "Gurugram, Haryana",
-    drop: "Gurugram, Haryana",
-    amount: 6000,
-    status: "ACTIVE",
-  },
-  {
-    id: "RX-AB5678",
-    customer: "Priya Gupta",
-    email: "priya@example.com",
-    phone: "+91 87654 32109",
-    vehicle: "Swift Dzire",
-    startDate: "Feb 11, 2025",
-    endDate: "Feb 12, 2025",
-    pickup: "Connaught Place, Delhi",
-    drop: "Connaught Place, Delhi",
-    amount: 1800,
-    status: "CONFIRMED",
-  },
-  {
-    id: "RX-CD9012",
-    customer: "Amit Verma",
-    email: "amit@example.com",
-    phone: "+91 76543 21098",
-    vehicle: "Toyota Fortuner",
-    startDate: "Feb 13, 2025",
-    endDate: "Feb 15, 2025",
-    pickup: "Aerocity, Delhi",
-    drop: "Aerocity, Delhi",
-    amount: 11000,
-    status: "PENDING",
-  },
-  {
-    id: "RX-EF3456",
-    customer: "Sneha Reddy",
-    email: "sneha@example.com",
-    phone: "+91 65432 10987",
-    vehicle: "Mercedes E-Class",
-    startDate: "Feb 9, 2025",
-    endDate: "Feb 11, 2025",
-    pickup: "Aerocity, Delhi",
-    drop: "Connaught Place, Delhi",
-    amount: 19000,
-    status: "ACTIVE",
-  },
-  {
-    id: "RX-GH7890",
-    customer: "Vikram Singh",
-    email: "vikram@example.com",
-    phone: "+91 54321 09876",
-    vehicle: "Honda City",
-    startDate: "Feb 8, 2025",
-    endDate: "Feb 9, 2025",
-    pickup: "Noida, UP",
-    drop: "Noida, UP",
-    amount: 2400,
-    status: "COMPLETED",
-  },
-  {
-    id: "RX-IJ1234",
-    customer: "Meera Patel",
-    email: "meera@example.com",
-    phone: "+91 43210 98765",
-    vehicle: "Maruti Baleno",
-    startDate: "Feb 7, 2025",
-    endDate: "Feb 7, 2025",
-    pickup: "Dwarka, Delhi",
-    drop: "Dwarka, Delhi",
-    amount: 960,
-    status: "CANCELLED",
-  },
-];
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
@@ -130,10 +50,41 @@ const statusColors: Record<string, string> = {
 export default function AdminBookingsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedBooking, setSelectedBooking] = useState<
-    (typeof bookings)[0] | null
-  >(null);
-  const [bookingList, setBookingList] = useState(bookings);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [bookingList, setBookingList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch("/api/bookings");
+        if (response.ok) {
+          const data = await response.json();
+          // Transform data to match component format
+          const formattedBookings = data.map((booking: any) => ({
+            id: booking.id,
+            customer: booking.userName || booking.userEmail?.split('@')[0] || "Guest",
+            email: booking.userEmail || "N/A",
+            phone: "N/A",
+            vehicle: booking.vehicle?.name || "Unknown Vehicle",
+            startDate: new Date(booking.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            endDate: new Date(booking.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            pickup: booking.pickupLocation,
+            drop: booking.dropLocation,
+            amount: booking.totalAmount,
+            status: booking.status,
+          }));
+          setBookingList(formattedBookings);
+        }
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
 
   const filtered = bookingList.filter((b) => {
     const matchesSearch =
@@ -160,6 +111,15 @@ export default function AdminBookingsPage() {
     COMPLETED: bookingList.filter((b) => b.status === "COMPLETED").length,
     CANCELLED: bookingList.filter((b) => b.status === "CANCELLED").length,
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="ml-3 text-muted-foreground">Loading bookings...</p>
+      </div>
+    );
+  }
 
   return (
     <div>

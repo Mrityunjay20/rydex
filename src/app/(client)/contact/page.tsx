@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,35 @@ import {
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [settings, setSettings] = useState<any>({
+    businessName: "RydeX",
+    phone: "+91 12345 67890",
+    whatsapp: "+91 98765 43210",
+    contactEmail: "hello@rydex.in",
+    address: "Connaught Place, New Delhi, 110001",
+    is24x7: true,
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        console.log("Fetching settings from API...");
+        const response = await fetch("/api/admin/settings");
+        console.log("Settings response status:", response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Settings data received:", data);
+          setSettings(data);
+        } else {
+          console.error("Failed to fetch settings, status:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,25 +75,24 @@ export default function ContactPage() {
               icon: MapPin,
               title: "Visit Us",
               lines: [
-                "RydeX HQ",
-                "Connaught Place",
-                "New Delhi, 110001",
-              ],
+                settings.businessName || "RydeX HQ",
+                settings.address || "Connaught Place, New Delhi, 110001",
+              ].filter(Boolean),
             },
             {
               icon: Phone,
               title: "Call Us",
-              lines: ["+91 12345 67890", "+91 98765 43210"],
+              lines: [settings.phone, settings.whatsapp].filter(Boolean),
             },
             {
               icon: Mail,
               title: "Email Us",
-              lines: ["hello@rydex.in", "support@rydex.in"],
+              lines: [settings.contactEmail, "support@rydex.in"].filter(Boolean),
             },
             {
               icon: Clock,
               title: "Working Hours",
-              lines: ["24/7 Available", "365 days a year"],
+              lines: settings.is24x7 ? ["24/7 Available", "365 days a year"] : ["Mon-Sun: 9 AM - 9 PM"],
             },
           ].map((item) => (
             <Card key={item.title} className="border shadow-sm">
@@ -74,9 +102,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">{item.title}</h3>
-                  {item.lines.map((line) => (
+                  {item.lines.map((line, index) => (
                     <p
-                      key={line}
+                      key={`${item.title}-${index}`}
                       className="text-sm text-muted-foreground"
                     >
                       {line}

@@ -28,8 +28,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Vehicle } from "@/lib/types";
-import { LOCATIONS, ADD_ONS } from "@/lib/constants";
+import { ADD_ONS } from "@/lib/constants";
 import { useRazorpay } from "@/hooks/useRazorpay";
+import { createClient } from "@/lib/supabase/client";
 
 export default function BookingPage({
   params,
@@ -49,8 +50,26 @@ export default function BookingPage({
   const [dropLocation, setDropLocation] = useState("");
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [businessName, setBusinessName] = useState("RydeX");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Not authenticated - redirect to login
+        router.push(`/auth/login?redirect=/booking/${vehicleId}`);
+        return;
+      }
+      
+      setIsAuthenticated(true);
+      setCheckingAuth(false);
+    };
+
     const fetchVehicle = async () => {
       try {
         const response = await fetch(`/api/vehicles/${vehicleId}`);
@@ -65,17 +84,38 @@ export default function BookingPage({
       }
     };
 
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/admin/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setLocations(data.locations || []);
+          setBusinessName(data.businessName || "RydeX");
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+
+    checkAuth();
     fetchVehicle();
-  }, [vehicleId]);
+    fetchSettings();
+  }, [vehicleId, router]);
   const isRazorpayLoaded = useRazorpay();
 
-  if (loading) {
+  if (checkingAuth || loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
         <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        <p className="mt-4 text-sm text-muted-foreground">Loading vehicle details...</p>
+        <p className="mt-4 text-sm text-muted-foreground">
+          {checkingAuth ? "Checking authentication..." : "Loading vehicle details..."}
+        </p>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return null;
   }
 
   if (!vehicle) {
@@ -159,6 +199,16 @@ export default function BookingPage({
     setIsSubmitting(true);
     
     try {
+      // Get authenticated user ID
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        alert("Please login to complete booking");
+        setIsSubmitting(false);
+        return;
+      }
+
       const totalAmount = calculateTotal();
       
       if (totalAmount <= 0) {
@@ -192,11 +242,19 @@ export default function BookingPage({
           totalAmount,
           addOns: selectedAddOns,
           razorpayOrderId: orderData.orderId,
+          userEmail: user.email,
+          userName: user.user_metadata?.name || user.email?.split('@')[0],
         }),
       });
 
       if (!bookingResponse.ok) {
-        throw new Error("Failed to create booking");
+        const errorData = await bookingResponse.json();
+        if (errorData.code === "VEHICLE_UNAVAILABLE") {
+          alert(errorData.error || "Vehicle is not available for the selected dates. Please choose different dates.");
+          setLoading(false);
+          return;
+        }
+        throw new Error(errorData.error || "Failed to create booking");
       }
 
       const booking = await bookingResponse.json();
@@ -205,7 +263,7 @@ export default function BookingPage({
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "RydeX",
+        name: businessName,
         description: `Booking for ${vehicle.name}`,
         order_id: orderData.orderId,
         handler: async function (response: any) {
@@ -379,7 +437,7 @@ export default function BookingPage({
                       <SelectValue placeholder="Select pickup point" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LOCATIONS.map((loc) => (
+                      {locations.map((loc) => (
                         <SelectItem key={loc} value={loc}>
                           {loc}
                         </SelectItem>
@@ -394,7 +452,7 @@ export default function BookingPage({
                       <SelectValue placeholder="Select drop point" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LOCATIONS.map((loc) => (
+                      {locations.map((loc) => (
                         <SelectItem key={loc} value={loc}>
                           {loc}
                         </SelectItem>
@@ -403,32 +461,6 @@ export default function BookingPage({
                   </Select>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Add-Ons */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Add-Ons (Optional)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {ADD_ONS.map((addOn) => (
-                <div
-                  key={addOn.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={selectedAddOns.includes(addOn.id)}
-                      onCheckedChange={() => toggleAddOn(addOn.id)}
-                    />
-                    <span className="text-sm font-medium">{addOn.label}</span>
-                  </div>
-                  <span className="text-sm font-semibold">
-                    +₹{addOn.price}
-                  </span>
-                </div>
-              ))}
             </CardContent>
           </Card>
         </div>
@@ -456,23 +488,6 @@ export default function BookingPage({
                       {pickupLocation}
                     </span>
                   </div>
-                )}
-                {selectedAddOns.length > 0 && (
-                  <>
-                    <Separator />
-                    <p className="font-medium">Add-Ons:</p>
-                    {selectedAddOns.map((id) => {
-                      const addOn = ADD_ONS.find((a) => a.id === id);
-                      return addOn ? (
-                        <div key={id} className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            {addOn.label}
-                          </span>
-                          <span>₹{addOn.price}</span>
-                        </div>
-                      ) : null;
-                    })}
-                  </>
                 )}
               </div>
 

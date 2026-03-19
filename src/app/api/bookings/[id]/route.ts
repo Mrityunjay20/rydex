@@ -9,7 +9,7 @@ export async function GET(
     const { id } = await params;
     const { data: booking, error } = await supabaseAdmin
       .from("Booking")
-      .select("*, vehicle:Vehicle(*), user:User(*), payment:Payment(*)")
+      .select("*, vehicle:Vehicle(*), payment:Payment(*)")
       .eq("id", id)
       .single();
 
@@ -42,7 +42,7 @@ export async function PATCH(
       .from("Booking")
       .update(body)
       .eq("id", id)
-      .select("*, vehicle:Vehicle(*), user:User(*), payment:Payment(*)")
+      .select("*, vehicle:Vehicle(*), payment:Payment(*)")
       .single();
 
     if (error) throw error;

@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   User,
   Car,
@@ -16,38 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
-const mockUser = {
-  name: "Rahul Sharma",
-  email: "rahul@example.com",
-  phone: "+91 98765 43210",
-  dlNumber: "DL-1234567890",
-  verified: true,
-  memberSince: "Jan 2024",
-};
-
-const recentBookings = [
-  {
-    id: "RX-ABC123",
-    vehicle: "Hyundai Creta",
-    date: "Feb 10 – Feb 12, 2025",
-    status: "ACTIVE",
-    amount: 6000,
-  },
-  {
-    id: "RX-DEF456",
-    vehicle: "Swift Dzire",
-    date: "Jan 25 – Jan 26, 2025",
-    status: "COMPLETED",
-    amount: 1800,
-  },
-  {
-    id: "RX-GHI789",
-    vehicle: "Honda City",
-    date: "Jan 15, 2025",
-    status: "COMPLETED",
-    amount: 2400,
-  },
-];
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
@@ -57,6 +28,67 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AccountPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const supabase = createClient();
+        
+        // Get current user
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !authUser) {
+          console.error("Not authenticated:", authError);
+          router.push("/auth/login");
+          return;
+        }
+
+        // Set user data
+        setUser({
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || "User",
+          email: authUser.email,
+          phone: authUser.user_metadata?.phone || "N/A",
+          verified: authUser.email_confirmed_at ? true : false,
+          memberSince: new Date(authUser.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        });
+
+        // Fetch user's bookings by email
+        const { data: bookings } = await supabase
+          .from('Booking')
+          .select('*')
+          .eq('userEmail', authUser.email)
+          .order('createdAt', { ascending: false })
+          .limit(3);
+
+        if (bookings) {
+          setRecentBookings(bookings);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-sm text-muted-foreground">Loading your account...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold mb-8">My Account</h1>
@@ -68,13 +100,13 @@ export default function AccountPage() {
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-20 w-20 mb-4">
                 <AvatarFallback className="bg-blue-600 text-white text-xl">
-                  RS
+                  {user.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <h2 className="text-xl font-bold">{mockUser.name}</h2>
-              <p className="text-sm text-muted-foreground">{mockUser.email}</p>
-              <p className="text-sm text-muted-foreground">{mockUser.phone}</p>
-              {mockUser.verified && (
+              <h2 className="text-xl font-bold">{user.name}</h2>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-sm text-muted-foreground">{user.phone}</p>
+              {user.verified && (
                 <Badge className="mt-2 bg-green-100 text-green-700 hover:bg-green-100">
                   Verified
                 </Badge>
@@ -82,17 +114,19 @@ export default function AccountPage() {
               <Separator className="my-4" />
               <div className="w-full space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">DL Number</span>
-                  <span className="font-medium">{mockUser.dlNumber}</span>
+                  <span className="text-muted-foreground">Member Since</span>
+                  <span className="font-medium">{user.memberSince}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Member Since</span>
-                  <span className="font-medium">{mockUser.memberSince}</span>
+                  <span className="text-muted-foreground">Total Bookings</span>
+                  <span className="font-medium">{recentBookings.length}</span>
                 </div>
               </div>
-              <Button variant="outline" className="mt-4 w-full" size="sm">
-                <Settings className="mr-2 h-4 w-4" />
-                Edit Profile
+              <Button variant="outline" className="mt-4 w-full" size="sm" asChild>
+                <Link href="/account/profile">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </Link>
               </Button>
             </div>
           </CardContent>
@@ -103,13 +137,13 @@ export default function AccountPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { icon: Car, label: "Total Rides", value: "12" },
-              { icon: Clock, label: "Active", value: "1" },
-              { icon: Calendar, label: "Upcoming", value: "0" },
+              { icon: Car, label: "Total Rides", value: recentBookings.length.toString() },
+              { icon: Clock, label: "Active", value: recentBookings.filter((b: any) => b.status === 'ACTIVE').length.toString() },
+              { icon: Calendar, label: "Upcoming", value: recentBookings.filter((b: any) => b.status === 'CONFIRMED').length.toString() },
               {
                 icon: CreditCard,
                 label: "Total Spent",
-                value: "₹32,400",
+                value: `₹${recentBookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0).toLocaleString('en-IN')}`,
               },
             ].map((stat) => (
               <Card key={stat.label} className="border">
@@ -135,7 +169,9 @@ export default function AccountPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentBookings.map((booking) => (
+                {recentBookings.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">No bookings yet. <Link href="/vehicles" className="text-blue-600 hover:underline">Browse vehicles</Link> to get started!</p>
+                ) : recentBookings.map((booking) => (
                   <div
                     key={booking.id}
                     className="flex items-center justify-between rounded-lg border p-3"
@@ -146,10 +182,10 @@ export default function AccountPage() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">
-                          {booking.vehicle}
+                          Booking #{booking.id.slice(0, 8)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {booking.date}
+                          {new Date(booking.startDate).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -162,7 +198,7 @@ export default function AccountPage() {
                         {booking.status}
                       </Badge>
                       <span className="text-sm font-semibold hidden sm:inline">
-                        ₹{booking.amount.toLocaleString("en-IN")}
+                        ₹{(booking.totalAmount || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>

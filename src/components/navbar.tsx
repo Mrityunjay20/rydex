@@ -1,14 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Menu, X, Car, User, LogIn } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Menu, X, Car, User, LogIn, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/lib/constants";
 
 export function Navbar() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -38,18 +66,43 @@ export function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/auth/login">
-              <LogIn className="mr-2 h-4 w-4" />
-              Login
-            </Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/auth/register">
-              <User className="mr-2 h-4 w-4" />
-              Sign Up
-            </Link>
-          </Button>
+          {user ? (
+            <>
+              {user.email === "admin@rydex.in" && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/admin">
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/account">
+                  <User className="mr-2 h-4 w-4" />
+                  Account
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/auth/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/auth/register">
+                  <User className="mr-2 h-4 w-4" />
+                  Sign Up
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu */}
@@ -81,18 +134,43 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="mt-4 flex flex-col gap-2">
-                <Button variant="outline" asChild>
-                  <Link href="/auth/login" onClick={() => setOpen(false)}>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/auth/register" onClick={() => setOpen(false)}>
-                    <User className="mr-2 h-4 w-4" />
-                    Sign Up
-                  </Link>
-                </Button>
+                {user ? (
+                  <>
+                    {user.email === "admin@rydex.in" && (
+                      <Button variant="outline" asChild>
+                        <Link href="/admin" onClick={() => setOpen(false)}>
+                          <Shield className="mr-2 h-4 w-4" />
+                          Admin
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="outline" asChild>
+                      <Link href="/account" onClick={() => setOpen(false)}>
+                        <User className="mr-2 h-4 w-4" />
+                        Account
+                      </Link>
+                    </Button>
+                    <Button onClick={() => { handleLogout(); setOpen(false); }}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link href="/auth/login" onClick={() => setOpen(false)}>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Login
+                      </Link>
+                    </Button>
+                    <Button asChild>
+                      <Link href="/auth/register" onClick={() => setOpen(false)}>
+                        <User className="mr-2 h-4 w-4" />
+                        Sign Up
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>

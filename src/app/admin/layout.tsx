@@ -22,7 +22,6 @@ const sidebarLinks = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Vehicles", href: "/admin/vehicles", icon: Car },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarCheck },
-  { label: "Customers", href: "/admin/customers", icon: Users },
   { label: "Revenue", href: "/admin/revenue", icon: IndianRupee },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
@@ -37,7 +36,7 @@ function SidebarContent({ pathname }: { pathname: string }) {
           </div>
           <div>
             <span className="text-lg font-bold">
-              Ryder<span className="text-blue-600">X</span>
+              Ryde<span className="text-blue-600">X</span>
             </span>
             <span className="ml-1.5 rounded bg-blue-600/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
               ADMIN
@@ -120,7 +119,7 @@ export default function AdminLayout({
             </SheetContent>
           </Sheet>
           <span className="font-bold">
-            Ryder<span className="text-blue-600">X</span>
+            Ryde<span className="text-blue-600">X</span>
             <span className="ml-1.5 rounded bg-blue-600/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
               ADMIN
             </span>

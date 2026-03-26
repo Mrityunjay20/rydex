@@ -44,6 +44,9 @@ export async function POST(request: NextRequest) {
       razorpayOrderId,
       userEmail,
       userName,
+      couponCode,
+      discountAmount,
+      originalAmount,
     } = body;
 
     // Check vehicle availability - prevent double bookings
@@ -60,12 +63,14 @@ export async function POST(request: NextRequest) {
     const hasConflict = existingBookings?.some((booking) => {
       const bookingStart = new Date(booking.startDate);
       const bookingEnd = new Date(booking.endDate);
+      // Add 1-hour buffer after booking ends (for cleaning/preparation)
+      const bookingEndWithBuffer = new Date(bookingEnd.getTime() + (60 * 60 * 1000));
       
-      // Check if dates overlap
+      // Check if dates overlap (including 1-hour buffer after each booking)
       return (
-        (requestedStart >= bookingStart && requestedStart < bookingEnd) ||
-        (requestedEnd > bookingStart && requestedEnd <= bookingEnd) ||
-        (requestedStart <= bookingStart && requestedEnd >= bookingEnd)
+        (requestedStart >= bookingStart && requestedStart < bookingEndWithBuffer) ||
+        (requestedEnd > bookingStart && requestedEnd <= bookingEndWithBuffer) ||
+        (requestedStart <= bookingStart && requestedEnd >= bookingEndWithBuffer)
       );
     });
 
@@ -94,6 +99,9 @@ export async function POST(request: NextRequest) {
         paymentStatus: "PENDING",
         userEmail: userEmail || null,
         userName: userName || null,
+        couponCode: couponCode || null,
+        discountAmount: discountAmount || 0,
+        originalAmount: originalAmount || totalAmount,
       })
       .select("*, vehicle:Vehicle(*)")
       .single();
@@ -137,30 +145,10 @@ export async function POST(request: NextRequest) {
         addOns: booking.addOns || [],
       };
 
-      // Send confirmation email to customer
-      if (customerEmail) {
-        const confirmationEmail = getBookingConfirmationEmail(emailData);
-        await resend.emails.send({
-          from: 'RydeX <bookings@rydexcar.com>',
-          to: customerEmail,
-          subject: confirmationEmail.subject,
-          html: confirmationEmail.html,
-        });
-      }
-
-      // Send notification to admin
-      const adminNotification = getAdminBookingNotification(emailData);
-      await resend.emails.send({
-        from: 'RydeX <notifications@rydexcar.com>',
-        to: adminEmail,
-        subject: adminNotification.subject,
-        html: adminNotification.html,
-      });
-
-      console.log("Booking confirmation emails sent successfully");
+      // Note: Emails will be sent after payment verification
+      // See /api/payment/verify endpoint
     } catch (emailError) {
-      console.error("Error sending confirmation emails:", emailError);
-      // Don't fail the booking if email fails
+      console.error("Error preparing booking data:", emailError);
     }
 
     return NextResponse.json(booking, { status: 201 });

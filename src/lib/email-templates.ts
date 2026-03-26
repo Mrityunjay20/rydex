@@ -95,7 +95,7 @@ export function getBookingConfirmationEmail(data: BookingConfirmationData) {
             </p>
             
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account/bookings" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/account/bookings" 
                  style="background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
                 View Booking Details
               </a>
@@ -201,7 +201,7 @@ export function getAdminBookingNotification(data: BookingConfirmationData & { cu
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/bookings" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/bookings" 
                  style="background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
                 View in Admin Dashboard
               </a>

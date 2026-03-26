@@ -12,6 +12,7 @@ import {
   CreditCard,
   Check,
   Car,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +55,10 @@ export default function BookingPage({
   const [businessName, setBusinessName] = useState("RydeX");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState("");
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -165,6 +170,60 @@ export default function BookingPage({
     return total + addOnTotal;
   };
 
+  const getOriginalTotal = () => calculateTotal();
+
+  const getDiscountAmount = () => {
+    if (!appliedCoupon) return 0;
+    const originalTotal = getOriginalTotal();
+    return Math.round((originalTotal * appliedCoupon.discountPercent) / 100);
+  };
+
+  const getFinalTotal = () => {
+    const originalTotal = getOriginalTotal();
+    const discount = getDiscountAmount();
+    return originalTotal - discount;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponError("");
+
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.toUpperCase() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+        setAppliedCoupon(data.coupon);
+        setCouponError("");
+      } else {
+        setCouponError(data.error || "Invalid coupon code");
+        setAppliedCoupon(null);
+      }
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      setCouponError("Failed to validate coupon");
+      setAppliedCoupon(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
   const getDuration = () => {
     if (!startDate || !endDate) return "Select dates";
     const start = new Date(`${startDate}T${startTime}`);
@@ -183,6 +242,21 @@ export default function BookingPage({
   const handleSubmit = async () => {
     if (!startDate || !endDate || !pickupLocation || !dropLocation) {
       alert("Please fill in all required fields (dates and locations).");
+      return;
+    }
+
+    // Validate dates are not in the past
+    const now = new Date();
+    const bookingStart = new Date(`${startDate}T${startTime}`);
+    const bookingEnd = new Date(`${endDate}T${endTime}`);
+
+    if (bookingStart < now) {
+      alert("Start date and time cannot be in the past. Please select a future date and time.");
+      return;
+    }
+
+    if (bookingEnd <= bookingStart) {
+      alert("End date and time must be after start date and time.");
       return;
     }
 
@@ -209,9 +283,11 @@ export default function BookingPage({
         return;
       }
 
-      const totalAmount = calculateTotal();
+      const originalTotal = getOriginalTotal();
+      const finalTotal = appliedCoupon ? getFinalTotal() : originalTotal;
+      const discount = appliedCoupon ? getDiscountAmount() : 0;
       
-      if (totalAmount <= 0) {
+      if (finalTotal <= 0) {
         throw new Error("Invalid booking amount");
       }
       
@@ -219,7 +295,7 @@ export default function BookingPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: totalAmount,
+          amount: finalTotal,
           receipt: `booking_${Date.now()}`,
         }),
       });
@@ -239,11 +315,14 @@ export default function BookingPage({
           endDate: `${endDate}T${endTime}`,
           pickupLocation,
           dropLocation,
-          totalAmount,
+          totalAmount: finalTotal,
           addOns: selectedAddOns,
           razorpayOrderId: orderData.orderId,
           userEmail: user.email,
           userName: user.user_metadata?.name || user.email?.split('@')[0],
+          couponCode: appliedCoupon?.code || null,
+          discountAmount: discount,
+          originalAmount: originalTotal,
         }),
       });
 
@@ -281,7 +360,7 @@ export default function BookingPage({
 
             if (verifyResponse.ok) {
               router.push(
-                `/booking/confirmation?vehicle=${vehicle.id}&total=${totalAmount}&bookingId=${booking.id}`
+                `/booking/confirmation?vehicle=${vehicle.id}&total=${finalTotal}&bookingId=${booking.id}`
               );
             } else {
               alert("Payment verification failed. Please contact support.");
@@ -493,10 +572,80 @@ export default function BookingPage({
 
               <Separator />
 
+              {/* Coupon Code Section */}
+              <div className="space-y-2">
+                <Label htmlFor="couponCode" className="text-sm font-medium">
+                  Have a coupon code?
+                </Label>
+                {!appliedCoupon ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="couponCode"
+                      placeholder="Enter code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      disabled={validatingCoupon}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyCoupon}
+                      disabled={validatingCoupon || !couponCode.trim()}
+                    >
+                      {validatingCoupon ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-green-700">
+                          {appliedCoupon.code}
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {appliedCoupon.discountPercent}% off applied
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveCoupon}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )}
+                {couponError && (
+                  <p className="text-xs text-red-600">{couponError}</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Price Breakdown */}
+              <div className="space-y-2 text-sm">
+                {appliedCoupon && (
+                  <>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Original Amount</span>
+                      <span>₹{getOriginalTotal().toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({appliedCoupon.discountPercent}%)</span>
+                      <span>-₹{getDiscountAmount().toLocaleString("en-IN")}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="flex items-baseline justify-between">
                 <span className="font-semibold">Total Amount</span>
                 <span className="text-2xl font-bold text-blue-600">
-                  ₹{calculateTotal().toLocaleString("en-IN")}
+                  ₹{(appliedCoupon ? getFinalTotal() : calculateTotal()).toLocaleString("en-IN")}
                 </span>
               </div>
 

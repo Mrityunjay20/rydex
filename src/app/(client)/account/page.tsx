@@ -56,16 +56,19 @@ export default function AccountPage() {
           memberSince: new Date(authUser.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         });
 
-        // Fetch user's bookings by email
-        const { data: bookings } = await supabase
-          .from('Booking')
-          .select('*')
-          .eq('userEmail', authUser.email)
-          .order('createdAt', { ascending: false })
-          .limit(3);
-
-        if (bookings) {
-          setRecentBookings(bookings);
+        // Fetch user's bookings via API
+        try {
+          const bookingsResponse = await fetch('/api/bookings');
+          if (bookingsResponse.ok) {
+            const allBookings = await bookingsResponse.json();
+            const userBookings = allBookings
+              .filter((b: any) => b.userEmail === authUser.email)
+              .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .slice(0, 3);
+            setRecentBookings(userBookings);
+          }
+        } catch (bookingError) {
+          console.error('Error fetching bookings:', bookingError);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);

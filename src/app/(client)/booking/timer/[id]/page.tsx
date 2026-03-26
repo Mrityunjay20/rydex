@@ -26,7 +26,7 @@ export default function BookingTimerPage({
   const [loading, setLoading] = useState(true);
   const [supportPhone, setSupportPhone] = useState("+911234567890");
   const [showExtendDialog, setShowExtendDialog] = useState(false);
-  const [extensionHours, setExtensionHours] = useState(24);
+  const [extensionHours, setExtensionHours] = useState<number | ''>('');
   const [extending, setExtending] = useState(false);
 
   useEffect(() => {
@@ -65,12 +65,17 @@ export default function BookingTimerPage({
 
   const handleExtendBooking = async () => {
     if (!booking) return;
-    
+
+    if (extensionHours === '' || extensionHours < 1) {
+      alert('Please enter the number of hours to extend (minimum 1 hour)');
+      return;
+    }
+
     setExtending(true);
     try {
       const currentEndDate = new Date(booking.endDate);
       const newEndDate = new Date(currentEndDate);
-      newEndDate.setHours(newEndDate.getHours() + extensionHours);
+      newEndDate.setHours(newEndDate.getHours() + (extensionHours as number));
 
       // Step 1: Get extension details and amount
       const response = await fetch('/api/bookings/extend', {
@@ -456,12 +461,20 @@ export default function BookingTimerPage({
 
       {/* Actions */}
       <div className="flex justify-center gap-3">
-        {(booking?.status === 'CONFIRMED' || booking?.status === 'ACTIVE') && (
-          <Button onClick={() => setShowExtendDialog(true)}>
-            <CalendarClock className="mr-2 h-4 w-4" />
-            Extend Booking
-          </Button>
-        )}
+        {(booking?.status === 'CONFIRMED' || booking?.status === 'ACTIVE') && (() => {
+          const now = new Date();
+          const end = new Date(booking.endDate);
+          const twoHoursBeforeEnd = new Date(end.getTime() - (2 * 60 * 60 * 1000));
+          // Show extend button BEFORE the last 2 hours (hide in final 2 hours)
+          const canExtend = now < twoHoursBeforeEnd;
+          
+          return canExtend && (
+            <Button onClick={() => setShowExtendDialog(true)}>
+              <CalendarClock className="mr-2 h-4 w-4" />
+              Extend Booking
+            </Button>
+          );
+        })()}
         <Button variant="outline" asChild>
           <a href={`tel:${supportPhone}`}>
             <Phone className="mr-2 h-4 w-4" />
@@ -490,24 +503,50 @@ export default function BookingTimerPage({
                   })}
                 </p>
               </div>
-              <div>
-                <label className="text-sm font-medium">Extend by (hours)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="720"
-                  step="1"
-                  value={extensionHours}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value >= 1 && value <= 720) {
-                      setExtensionHours(value);
-                    }
-                  }}
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {extensionHours >= 24 ? `${Math.floor(extensionHours / 24)} day${Math.floor(extensionHours / 24) > 1 ? 's' : ''} ${extensionHours % 24 > 0 ? `${extensionHours % 24} hour${extensionHours % 24 > 1 ? 's' : ''}` : ''}` : `${extensionHours} hour${extensionHours > 1 ? 's' : ''}`}
+              <div className="space-y-2">
+                <label className="text-sm font-medium block">Extend by (hours only)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="720"
+                    step="1"
+                    value={extensionHours}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '') {
+                        setExtensionHours('');
+                      } else {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue) && numValue >= 1 && numValue <= 720) {
+                          setExtensionHours(numValue);
+                        }
+                      }
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
+                    placeholder="Enter hours (1-720)"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                    hours
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <p className="text-muted-foreground">
+                    Duration: <span className="font-medium text-foreground">
+                      {extensionHours === '' ? '-' : extensionHours >= 24 
+                        ? `${Math.floor(extensionHours / 24)} day${Math.floor(extensionHours / 24) > 1 ? 's' : ''}${extensionHours % 24 > 0 ? ` ${extensionHours % 24} hour${extensionHours % 24 > 1 ? 's' : ''}` : ''}`
+                        : `${extensionHours} hour${extensionHours > 1 ? 's' : ''}`}
+                    </span>
+                  </p>
+                  <p className="text-muted-foreground">
+                    Cost: <span className="font-semibold text-blue-600">
+                      {extensionHours === '' ? '-' : `₹${((extensionHours as number) * (booking?.vehicle?.pricePerHour || 0)).toLocaleString('en-IN')}`}
+                    </span>
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Min: 1 hour • Max: 720 hours (30 days)
                 </p>
               </div>
               <div className="flex gap-2">

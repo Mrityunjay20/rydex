@@ -20,6 +20,18 @@ const statusColors: Record<string, string> = {
 };
 
 function BookingCard({ booking }: { booking: any }) {
+  // Check if extend booking should be shown (before 2 hours of end time)
+  const now = new Date();
+  const endDate = new Date(booking.endDate);
+  const twoHoursBeforeEnd = new Date(endDate.getTime() - (2 * 60 * 60 * 1000));
+  // Show extend button BEFORE the last 2 hours (hide in final 2 hours)
+  const canExtend = now < twoHoursBeforeEnd;
+
+  // Check if PENDING booking has expired (10 minutes)
+  const createdAt = new Date(booking.createdAt);
+  const tenMinutesAfterCreation = new Date(createdAt.getTime() + (10 * 60 * 1000));
+  const isPendingExpired = booking.status === 'PENDING' && now > tenMinutesAfterCreation;
+
   return (
     <Card className="border shadow-sm">
       <CardContent className="p-4">
@@ -60,6 +72,19 @@ function BookingCard({ booking }: { booking: any }) {
             <p className="text-lg font-bold">
               ₹{booking.amount.toLocaleString("en-IN")}
             </p>
+            {booking.status === "PENDING" && (
+              isPendingExpired ? (
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                  Payment Expired
+                </Badge>
+              ) : (
+                <Button size="sm" variant="default" asChild>
+                  <Link href={`/booking/payment/${booking.id}`}>
+                    Complete Payment
+                  </Link>
+                </Button>
+              )
+            )}
             {(booking.status === "ACTIVE" || booking.status === "CONFIRMED") && (
               <div className="flex flex-col gap-2">
                 <Button size="sm" asChild>
@@ -68,12 +93,14 @@ function BookingCard({ booking }: { booking: any }) {
                     View Timer
                   </Link>
                 </Button>
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={`/booking/timer/${booking.id}`}>
-                    <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
-                    Extend Booking
-                  </Link>
-                </Button>
+                {canExtend && (
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={`/booking/timer/${booking.id}`}>
+                      <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
+                      Extend Booking
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -110,18 +137,42 @@ export default function BookingsPage() {
             return booking.userEmail === user.email;
           });
           
-          // Transform to match component format
-          const formattedBookings = userBookings.map((booking: any) => ({
-            id: booking.id,
-            vehicle: booking.vehicle?.name || "Unknown Vehicle",
-            vehicleType: booking.vehicle?.type || "CAR",
-            startDate: new Date(booking.startDate).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-            endDate: new Date(booking.endDate).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-            pickup: booking.pickupLocation,
-            drop: booking.dropLocation,
-            status: booking.status,
-            amount: booking.totalAmount,
-          }));
+          // Transform to match component format and calculate dynamic status
+          const formattedBookings = userBookings.map((booking: any) => {
+            const now = new Date();
+            const startDate = new Date(booking.startDate);
+            const endDate = new Date(booking.endDate);
+            
+            // Calculate dynamic status based on dates and payment
+            let displayStatus = booking.status;
+            
+            if (booking.paymentStatus === 'PENDING' || booking.status === 'PENDING') {
+              displayStatus = 'PENDING';
+            } else if (booking.status === 'CANCELLED') {
+              displayStatus = 'CANCELLED';
+            } else if (now > endDate) {
+              // Booking has ended
+              displayStatus = 'COMPLETED';
+            } else if (now >= startDate && now <= endDate) {
+              // Booking is currently active
+              displayStatus = 'ACTIVE';
+            } else if (now < startDate) {
+              // Booking is confirmed but hasn't started yet
+              displayStatus = 'CONFIRMED';
+            }
+            
+            return {
+              id: booking.id,
+              vehicle: booking.vehicle?.name || "Unknown Vehicle",
+              vehicleType: booking.vehicle?.type || "CAR",
+              startDate: startDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+              endDate: endDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+              pickup: booking.pickupLocation,
+              drop: booking.dropLocation,
+              status: displayStatus,
+              amount: booking.totalAmount,
+            };
+          });
           
           setBookings(formattedBookings);
         }

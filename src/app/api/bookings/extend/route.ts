@@ -54,14 +54,19 @@ export async function POST(request: NextRequest) {
       .neq("id", bookingId) // Exclude current booking
       .in("status", ["PENDING", "CONFIRMED", "ACTIVE"]);
 
-    // Check for overlapping bookings during extension period
+    // Check for overlapping bookings during extension period ONLY
     const hasConflict = conflictingBookings?.some((otherBooking) => {
       const otherStart = new Date(otherBooking.startDate);
       const otherEnd = new Date(otherBooking.endDate);
       
-      // Check if extension period overlaps with other bookings
+      // Add 1-hour buffer before next booking starts (for cleaning/preparation)
+      const otherStartWithBuffer = new Date(otherStart.getTime() - (60 * 60 * 1000));
+      
+      // Check if the EXTENSION PERIOD (currentEndDate to requestedEndDate) overlaps with other bookings
+      // Extension period starts AFTER current end, so only check from currentEndDate onwards
+      // Must end at least 1 hour before next booking starts
       return (
-        (currentEndDate < otherEnd && requestedEndDate > otherStart)
+        (otherStartWithBuffer < requestedEndDate && otherEnd > currentEndDate)
       );
     });
 

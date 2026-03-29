@@ -117,6 +117,7 @@ export default function AdminBookingsPage() {
     const statusLabels: Record<string, string> = {
       CONFIRMED: "approve",
       CANCELLED: "reject",
+      ACTIVE: "mark as active",
       COMPLETED: "mark as completed",
     };
 
@@ -317,15 +318,26 @@ export default function AdminBookingsPage() {
                               </DropdownMenuItem>
                             </>
                           )}
-                          {booking.status === "ACTIVE" && (
+                          {booking.status === "CONFIRMED" && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                updateStatus(booking.id, "ACTIVE")
+                              }
+                              disabled={updatingBookingId === booking.id}
+                            >
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-blue-600" />
+                              {updatingBookingId === booking.id ? "Updating..." : "Mark as Active"}
+                            </DropdownMenuItem>
+                          )}
+                          {(booking.status === "ACTIVE" || booking.status === "CONFIRMED") && (
                             <DropdownMenuItem
                               onClick={() =>
                                 updateStatus(booking.id, "COMPLETED")
                               }
                               disabled={updatingBookingId === booking.id}
                             >
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              {updatingBookingId === booking.id ? "Updating..." : "Mark Returned"}
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                              {updatingBookingId === booking.id ? "Updating..." : "Mark as Completed"}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -444,6 +456,29 @@ export default function AdminBookingsPage() {
                     </Button>
                   </>
                 )}
+                {selectedBooking.status === "CONFIRMED" && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        updateStatus(selectedBooking.id, "ACTIVE")
+                      }
+                      disabled={updatingBookingId === selectedBooking.id}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {updatingBookingId === selectedBooking.id ? "Updating..." : "Mark as Active"}
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        updateStatus(selectedBooking.id, "COMPLETED")
+                      }
+                      disabled={updatingBookingId === selectedBooking.id}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {updatingBookingId === selectedBooking.id ? "Updating..." : "Mark as Completed"}
+                    </Button>
+                  </>
+                )}
                 {selectedBooking.status === "ACTIVE" && (
                   <Button
                     onClick={() =>
@@ -452,7 +487,7 @@ export default function AdminBookingsPage() {
                     disabled={updatingBookingId === selectedBooking.id}
                   >
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    {updatingBookingId === selectedBooking.id ? "Updating..." : "Mark as Returned"}
+                    {updatingBookingId === selectedBooking.id ? "Updating..." : "Mark as Completed"}
                   </Button>
                 )}
               </div>

@@ -17,8 +17,6 @@ const DEFAULT_SETTINGS = {
   is24x7: true,
   gracePeriodMinutes: 60,
   minAdvanceBookingHours: 2,
-  emailNotifications: true,
-  timerExpiryAlerts: true,
   locations: [
     "Connaught Place, Delhi",
     "Aerocity, Delhi",

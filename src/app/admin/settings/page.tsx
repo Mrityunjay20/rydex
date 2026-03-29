@@ -31,10 +31,6 @@ export default function AdminSettingsPage() {
     is24x7: true,
     gracePeriodMinutes: 60,
     minAdvanceBookingHours: 2,
-    emailNotifications: true,
-    smsAlerts: true,
-    whatsappReminders: false,
-    timerExpiryAlerts: true,
     locations: [],
   });
 
@@ -305,47 +301,6 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Notifications */}
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Notifications</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {[
-              {
-                title: "Email notifications for new bookings",
-                desc: "Receive email when a customer makes a booking",
-                checked: true,
-              },
-              {
-                title: "SMS alerts for booking status changes",
-                desc: "Send SMS to customers on status updates",
-                checked: true,
-              },
-              {
-                title: "WhatsApp booking reminders",
-                desc: "Send pickup reminders via WhatsApp",
-                checked: false,
-              },
-              {
-                title: "Timer expiry alerts",
-                desc: "Notify at 1hr, 30min, 15min before rental ends",
-                checked: true,
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-sm font-medium">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
-                </div>
-                <Switch defaultChecked={item.checked} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

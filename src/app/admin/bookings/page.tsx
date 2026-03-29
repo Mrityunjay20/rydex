@@ -67,8 +67,22 @@ export default function AdminBookingsPage() {
             email: booking.userEmail || "N/A",
             phone: "N/A",
             vehicle: booking.vehicle?.name || "Unknown Vehicle",
-            startDate: new Date(booking.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            endDate: new Date(booking.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            startDate: new Date(booking.startDate).toLocaleString('en-IN', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'Asia/Kolkata'
+            }),
+            endDate: new Date(booking.endDate).toLocaleString('en-IN', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'Asia/Kolkata'
+            }),
             pickup: booking.pickupLocation,
             drop: booking.dropLocation,
             amount: booking.totalAmount,

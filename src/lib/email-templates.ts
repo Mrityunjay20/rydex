@@ -28,10 +28,12 @@ export function getBookingConfirmationEmail(data: BookingConfirmationData) {
   const formattedStartDate = new Date(startDate).toLocaleString('en-IN', {
     dateStyle: 'full',
     timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
   });
   const formattedEndDate = new Date(endDate).toLocaleString('en-IN', {
     dateStyle: 'full',
     timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
   });
 
   return {
@@ -132,10 +134,12 @@ export function getAdminBookingNotification(data: BookingConfirmationData & { cu
   const formattedStartDate = new Date(startDate).toLocaleString('en-IN', {
     dateStyle: 'full',
     timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
   });
   const formattedEndDate = new Date(endDate).toLocaleString('en-IN', {
     dateStyle: 'full',
     timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
   });
 
   return {

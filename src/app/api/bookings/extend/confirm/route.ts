@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabaseAdmin
       .from("Booking")
       .update({
-        endDate: new Date(newEndDate).toISOString(),
+        endDate: newEndDate,
         totalAmount: newTotalAmount,
       })
       .eq("id", bookingId);
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
           year: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
         });
 
         const formattedOriginalEndDate = new Date(booking.endDate).toLocaleString('en-IN', {
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
           year: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
         });
 
         await resend.emails.send({

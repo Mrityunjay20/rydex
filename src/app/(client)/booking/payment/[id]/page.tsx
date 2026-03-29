@@ -211,6 +211,7 @@ export default function RetryPaymentPage({
                   year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
+                  timeZone: 'Asia/Kolkata',
                 })}
               </span>
             </div>
@@ -223,6 +224,7 @@ export default function RetryPaymentPage({
                   year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
+                  timeZone: 'Asia/Kolkata',
                 })}
               </span>
             </div>

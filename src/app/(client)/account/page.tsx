@@ -141,8 +141,17 @@ export default function AccountPage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               { icon: Car, label: "Total Rides", value: recentBookings.length.toString() },
-              { icon: Clock, label: "Active", value: recentBookings.filter((b: any) => b.status === 'ACTIVE').length.toString() },
-              { icon: Calendar, label: "Upcoming", value: recentBookings.filter((b: any) => b.status === 'CONFIRMED').length.toString() },
+              { icon: Clock, label: "Active", value: recentBookings.filter((b: any) => {
+                const now = new Date();
+                const start = new Date(b.startDate);
+                const end = new Date(b.endDate);
+                return (b.status === 'ACTIVE' || b.status === 'CONFIRMED') && now >= start && now <= end;
+              }).length.toString() },
+              { icon: Calendar, label: "Upcoming", value: recentBookings.filter((b: any) => {
+                const now = new Date();
+                const start = new Date(b.startDate);
+                return (b.status === 'CONFIRMED' || b.status === 'PENDING') && start > now;
+              }).length.toString() },
               {
                 icon: CreditCard,
                 label: "Total Spent",
@@ -188,7 +197,9 @@ export default function AccountPage() {
                           Booking #{booking.id.slice(0, 8)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(booking.startDate).toLocaleDateString()}
+                          {new Date(booking.startDate).toLocaleDateString('en-IN', {
+                            timeZone: 'Asia/Kolkata'
+                          })}
                         </p>
                       </div>
                     </div>

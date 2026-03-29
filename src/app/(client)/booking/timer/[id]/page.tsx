@@ -307,12 +307,13 @@ export default function BookingTimerPage({
                 Rental Not Started Yet
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Your rental period begins on {startTime.toLocaleDateString("en-IN", {
+                Your rental period begins on {startTime.toLocaleString("en-IN", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: "Asia/Kolkata",
                 })}
               </p>
             </div>
@@ -421,18 +422,20 @@ export default function BookingTimerPage({
             <div>
               <p className="text-sm text-muted-foreground">Rental Period</p>
               <p className="font-medium">
-                {startTime.toLocaleDateString("en-IN", {
+                {startTime.toLocaleString("en-IN", {
                   day: "numeric",
                   month: "short",
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: "Asia/Kolkata",
                 })}{" "}
                 &mdash;{" "}
-                {endTime.toLocaleDateString("en-IN", {
+                {endTime.toLocaleString("en-IN", {
                   day: "numeric",
                   month: "short",
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: "Asia/Kolkata",
                 })}
               </p>
             </div>
@@ -494,12 +497,13 @@ export default function BookingTimerPage({
               <div>
                 <label className="text-sm font-medium">Current End Date</label>
                 <p className="text-sm text-muted-foreground">
-                  {endTime.toLocaleDateString('en-IN', {
+                  {endTime.toLocaleString('en-IN', {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
+                    timeZone: 'Asia/Kolkata',
                   })}
                 </p>
               </div>

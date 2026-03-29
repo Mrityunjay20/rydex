@@ -165,8 +165,22 @@ export default function BookingsPage() {
               id: booking.id,
               vehicle: booking.vehicle?.name || "Unknown Vehicle",
               vehicleType: booking.vehicle?.type || "CAR",
-              startDate: startDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-              endDate: endDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+              startDate: startDate.toLocaleString('en-IN', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Asia/Kolkata'
+              }),
+              endDate: endDate.toLocaleString('en-IN', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Asia/Kolkata'
+              }),
               pickup: booking.pickupLocation,
               drop: booking.dropLocation,
               status: displayStatus,

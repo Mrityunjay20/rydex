@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
       .insert({
         userId: null,
         vehicleId,
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
+        startDate: startDate,
+        endDate: endDate,
         pickupLocation,
         dropLocation,
         totalAmount,

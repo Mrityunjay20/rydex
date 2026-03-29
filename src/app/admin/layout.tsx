@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Menu,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -22,6 +23,7 @@ const sidebarLinks = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Vehicles", href: "/admin/vehicles", icon: Car },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarCheck },
+  { label: "Coupons", href: "/admin/coupons", icon: Tag },
   { label: "Revenue", href: "/admin/revenue", icon: IndianRupee },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];

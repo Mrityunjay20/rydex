@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
           await resend.emails.send({
             from: 'RydeX <bookings@rydexcar.com>',
             to: booking.userEmail,
+            cc: ['support@ryderxcar.com'],
             subject: confirmationEmail.subject,
             html: confirmationEmail.html,
           });
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
           await resend.emails.send({
             from: 'RydeX <notifications@rydexcar.com>',
             to: adminEmail,
+            cc: ['support@ryderxcar.com'],
             subject: adminNotification.subject,
             html: adminNotification.html,
           });

@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: 'RydeX <bookings@rydexcar.com>',
           to: booking.userEmail,
+          cc: ['support@ryderxcar.com'],
           subject: `Booking Extended - ${booking.vehicle?.name || 'Vehicle'}`,
           html: `
             <!DOCTYPE html>

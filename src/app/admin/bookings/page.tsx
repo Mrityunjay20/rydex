@@ -53,6 +53,7 @@ export default function AdminBookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [bookingList, setBookingList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -112,11 +113,41 @@ export default function AdminBookingsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const updateStatus = (id: string, status: string) => {
-    setBookingList((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status } : b))
-    );
-    setSelectedBooking(null);
+  const updateStatus = async (id: string, status: string) => {
+    const statusLabels: Record<string, string> = {
+      CONFIRMED: "approve",
+      CANCELLED: "reject",
+      COMPLETED: "mark as completed",
+    };
+
+    const action = statusLabels[status] || "update";
+    if (!confirm(`Are you sure you want to ${action} this booking?`)) {
+      return;
+    }
+
+    setUpdatingBookingId(id);
+
+    try {
+      const response = await fetch(`/api/bookings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update booking status");
+      }
+
+      setBookingList((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, status } : b))
+      );
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      alert("Failed to update booking status. Please try again.");
+    } finally {
+      setUpdatingBookingId(null);
+    }
   };
 
   const statusCounts = {
@@ -259,6 +290,7 @@ export default function AdminBookingsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() => setSelectedBooking(booking)}
+                            disabled={updatingBookingId === booking.id}
                           >
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
@@ -269,17 +301,19 @@ export default function AdminBookingsPage() {
                                 onClick={() =>
                                   updateStatus(booking.id, "CONFIRMED")
                                 }
+                                disabled={updatingBookingId === booking.id}
                               >
                                 <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
-                                Approve
+                                {updatingBookingId === booking.id ? "Updating..." : "Approve"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   updateStatus(booking.id, "CANCELLED")
                                 }
+                                disabled={updatingBookingId === booking.id}
                               >
                                 <XCircle className="mr-2 h-4 w-4 text-red-600" />
-                                Reject
+                                {updatingBookingId === booking.id ? "Updating..." : "Reject"}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -288,9 +322,10 @@ export default function AdminBookingsPage() {
                               onClick={() =>
                                 updateStatus(booking.id, "COMPLETED")
                               }
+                              disabled={updatingBookingId === booking.id}
                             >
                               <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Mark Returned
+                              {updatingBookingId === booking.id ? "Updating..." : "Mark Returned"}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -393,17 +428,19 @@ export default function AdminBookingsPage() {
                       onClick={() =>
                         updateStatus(selectedBooking.id, "CANCELLED")
                       }
+                      disabled={updatingBookingId === selectedBooking.id}
                     >
                       <XCircle className="mr-2 h-4 w-4" />
-                      Reject
+                      {updatingBookingId === selectedBooking.id ? "Updating..." : "Reject"}
                     </Button>
                     <Button
                       onClick={() =>
                         updateStatus(selectedBooking.id, "CONFIRMED")
                       }
+                      disabled={updatingBookingId === selectedBooking.id}
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Approve
+                      {updatingBookingId === selectedBooking.id ? "Updating..." : "Approve"}
                     </Button>
                   </>
                 )}
@@ -412,9 +449,10 @@ export default function AdminBookingsPage() {
                     onClick={() =>
                       updateStatus(selectedBooking.id, "COMPLETED")
                     }
+                    disabled={updatingBookingId === selectedBooking.id}
                   >
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Mark as Returned
+                    {updatingBookingId === selectedBooking.id ? "Updating..." : "Mark as Returned"}
                   </Button>
                 )}
               </div>

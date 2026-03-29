@@ -57,9 +57,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const { error } = await supabaseAdmin.from("Vehicle").delete().eq("id", id);
+    const { data: vehicle, error } = await supabaseAdmin
+      .from("Vehicle")
+      .update({ isDeleted: true })
+      .eq("id", id)
+      .select()
+      .single();
     if (error) throw error;
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, vehicle });
   } catch (error) {
     console.error("Error deleting vehicle:", error);
     return NextResponse.json(

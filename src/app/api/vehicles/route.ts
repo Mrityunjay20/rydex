@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const sortBy = searchParams.get("sortBy");
 
-    let query = supabaseAdmin.from("Vehicle").select("*");
+    let query = supabaseAdmin.from("Vehicle").select("*").eq("isDeleted", false);
 
     if (type) query = query.eq("type", type);
     if (fuelType) query = query.eq("fuelType", fuelType);

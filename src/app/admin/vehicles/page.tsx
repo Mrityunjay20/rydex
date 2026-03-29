@@ -94,16 +94,51 @@ export default function AdminVehiclesPage() {
       v.licensePlate.toLowerCase().includes(search.toLowerCase())
   );
 
-  const toggleAvailability = (id: string) => {
-    setVehicleList((prev) =>
-      prev.map((v) =>
-        v.id === id ? { ...v, available: !v.available } : v
-      )
-    );
+  const toggleAvailability = async (id: string) => {
+    const vehicle = vehicleList.find((v) => v.id === id);
+    if (!vehicle) return;
+
+    try {
+      const response = await fetch(`/api/admin/vehicles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ available: !vehicle.available }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update vehicle availability");
+      }
+
+      setVehicleList((prev) =>
+        prev.map((v) =>
+          v.id === id ? { ...v, available: !v.available } : v
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling availability:", error);
+      alert("Failed to update vehicle availability. Please try again.");
+    }
   };
 
-  const deleteVehicle = (id: string) => {
-    setVehicleList((prev) => prev.filter((v) => v.id !== id));
+  const deleteVehicle = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this vehicle?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/vehicles/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete vehicle");
+      }
+
+      setVehicleList((prev) => prev.filter((v) => v.id !== id));
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+      alert("Failed to delete vehicle. Please try again.");
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

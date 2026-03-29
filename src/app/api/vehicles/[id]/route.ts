@@ -11,6 +11,7 @@ export async function GET(
       .from("Vehicle")
       .select("*, Review(*, User(*))")
       .eq("id", id)
+      .eq("isDeleted", false)
       .single();
 
     if (error || !vehicle) {

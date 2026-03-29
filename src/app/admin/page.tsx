@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Car,
   CalendarCheck,
@@ -9,6 +10,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,63 +26,23 @@ import {
   Line,
 } from "recharts";
 
-const revenueData = [
-  { month: "Aug", revenue: 185000 },
-  { month: "Sep", revenue: 220000 },
-  { month: "Oct", revenue: 265000 },
-  { month: "Nov", revenue: 310000 },
-  { month: "Dec", revenue: 380000 },
-  { month: "Jan", revenue: 420000 },
-  { month: "Feb", revenue: 345000 },
-];
-
-const bookingsData = [
-  { day: "Mon", bookings: 12 },
-  { day: "Tue", bookings: 18 },
-  { day: "Wed", bookings: 15 },
-  { day: "Thu", bookings: 22 },
-  { day: "Fri", bookings: 28 },
-  { day: "Sat", bookings: 35 },
-  { day: "Sun", bookings: 30 },
-];
-
-const recentBookings = [
-  {
-    id: "RX-XY1234",
-    customer: "Rahul Sharma",
-    vehicle: "Hyundai Creta",
-    amount: 6000,
-    status: "ACTIVE",
-  },
-  {
-    id: "RX-AB5678",
-    customer: "Priya Gupta",
-    vehicle: "Swift Dzire",
-    amount: 1800,
-    status: "CONFIRMED",
-  },
-  {
-    id: "RX-CD9012",
-    customer: "Amit Verma",
-    vehicle: "Toyota Fortuner",
-    amount: 11000,
-    status: "PENDING",
-  },
-  {
-    id: "RX-EF3456",
-    customer: "Sneha Reddy",
-    vehicle: "Mercedes E-Class",
-    amount: 19000,
-    status: "ACTIVE",
-  },
-  {
-    id: "RX-GH7890",
-    customer: "Vikram Singh",
-    vehicle: "Honda City",
-    amount: 2400,
-    status: "COMPLETED",
-  },
-];
+interface DashboardData {
+  stats: {
+    totalRevenue: { value: number; growth: number };
+    activeBookings: { value: number; growth: number };
+    fleetUtilization: { value: number; growth: number };
+    newCustomers: { value: number; growth: number };
+  };
+  monthlyRevenue: { month: string; revenue: number }[];
+  weeklyBookings: { day: string; bookings: number }[];
+  recentBookings: {
+    id: string;
+    customer: string;
+    vehicle: string;
+    amount: number;
+    status: string;
+  }[];
+}
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
@@ -90,6 +52,85 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminDashboard() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/admin/dashboard");
+        if (!response.ok) throw new Error("Failed to fetch dashboard data");
+        const data = await response.json();
+        setDashboardData(data);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">{error || "Failed to load dashboard"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = [
+    {
+      title: "Total Revenue",
+      value: `₹${dashboardData.stats.totalRevenue.value.toLocaleString("en-IN")}`,
+      change: `${dashboardData.stats.totalRevenue.growth >= 0 ? "+" : ""}${dashboardData.stats.totalRevenue.growth.toFixed(1)}%`,
+      trend: dashboardData.stats.totalRevenue.growth >= 0 ? "up" : "down",
+      icon: IndianRupee,
+      color: "text-green-600",
+    },
+    {
+      title: "Active Bookings",
+      value: dashboardData.stats.activeBookings.value.toString(),
+      change: `${dashboardData.stats.activeBookings.growth >= 0 ? "+" : ""}${dashboardData.stats.activeBookings.growth}`,
+      trend: dashboardData.stats.activeBookings.growth >= 0 ? "up" : "down",
+      icon: CalendarCheck,
+      color: "text-blue-600",
+    },
+    {
+      title: "Fleet Utilization",
+      value: `${dashboardData.stats.fleetUtilization.value}%`,
+      change: `${dashboardData.stats.fleetUtilization.growth >= 0 ? "+" : ""}${dashboardData.stats.fleetUtilization.growth}%`,
+      trend: dashboardData.stats.fleetUtilization.growth >= 0 ? "up" : "down",
+      icon: Car,
+      color: "text-purple-600",
+    },
+    {
+      title: "New Customers",
+      value: dashboardData.stats.newCustomers.value.toString(),
+      change: `${dashboardData.stats.newCustomers.growth >= 0 ? "+" : ""}${dashboardData.stats.newCustomers.growth.toFixed(1)}%`,
+      trend: dashboardData.stats.newCustomers.growth >= 0 ? "up" : "down",
+      icon: Users,
+      color: "text-orange-600",
+    },
+  ];
+
   return (
     <div>
       <div className="mb-8">
@@ -101,40 +142,7 @@ export default function AdminDashboard() {
 
       {/* Stats Cards */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            title: "Total Revenue",
-            value: "₹4,20,000",
-            change: "+12.5%",
-            trend: "up",
-            icon: IndianRupee,
-            color: "text-green-600",
-          },
-          {
-            title: "Active Bookings",
-            value: "24",
-            change: "+3",
-            trend: "up",
-            icon: CalendarCheck,
-            color: "text-blue-600",
-          },
-          {
-            title: "Fleet Utilization",
-            value: "78%",
-            change: "+5%",
-            trend: "up",
-            icon: Car,
-            color: "text-purple-600",
-          },
-          {
-            title: "New Customers",
-            value: "156",
-            change: "-8%",
-            trend: "down",
-            icon: Users,
-            color: "text-orange-600",
-          },
-        ].map((stat) => (
+        {stats.map((stat) => (
           <Card key={stat.title} className="border shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
@@ -180,7 +188,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={revenueData}>
+              <BarChart data={dashboardData.monthlyRevenue}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" fontSize={12} />
                 <YAxis
@@ -212,7 +220,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={bookingsData}>
+              <LineChart data={dashboardData.weeklyBookings}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="day" fontSize={12} />
                 <YAxis fontSize={12} />
@@ -261,7 +269,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentBookings.map((booking) => (
+                {dashboardData.recentBookings.map((booking) => (
                   <tr key={booking.id} className="border-b last:border-0">
                     <td className="py-3 font-mono text-xs">
                       {booking.id}

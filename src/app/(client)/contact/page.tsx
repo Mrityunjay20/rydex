@@ -223,7 +223,7 @@ export default function ContactPage() {
       </div>
 
       {/* Map Embed */}
-      <div className="mt-12 overflow-hidden rounded-xl border">
+      {/* <div className="mt-12 overflow-hidden rounded-xl border">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3501.647644048!2d77.21726751508!3d28.632710482418!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd37b741d057%3A0xcdee88e47393c3f1!2sConnaught%20Place%2C%20New%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
           width="100%"
@@ -234,7 +234,7 @@ export default function ContactPage() {
           referrerPolicy="no-referrer-when-downgrade"
           title="RydeX Location"
         />
-      </div>
+      </div> */}
     </div>
   );
 }

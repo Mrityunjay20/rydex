@@ -213,9 +213,7 @@ function LoginForm() {
             </Link>
           </p>
 
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            Demo: Use <strong>admin@rydex.in</strong> for admin access
-          </p>
+          
 
           {debugInfo.length > 0 && (
             <div className="mt-4 rounded-lg bg-gray-100 p-3 text-xs">

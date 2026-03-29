@@ -83,6 +83,8 @@ export default function AdminBookingsPage() {
               minute: '2-digit',
               timeZone: 'Asia/Kolkata'
             }),
+            startDateRaw: new Date(booking.startDate),
+            endDateRaw: new Date(booking.endDate),
             pickup: booking.pickupLocation,
             drop: booking.dropLocation,
             amount: booking.totalAmount,
@@ -121,7 +123,12 @@ export default function AdminBookingsPage() {
     all: bookingList.length,
     PENDING: bookingList.filter((b) => b.status === "PENDING").length,
     CONFIRMED: bookingList.filter((b) => b.status === "CONFIRMED").length,
-    ACTIVE: bookingList.filter((b) => b.status === "ACTIVE").length,
+    ACTIVE: bookingList.filter((b) => {
+      const now = new Date();
+      return (b.status === 'ACTIVE' || b.status === 'CONFIRMED') && 
+             b.startDateRaw && b.endDateRaw &&
+             now >= b.startDateRaw && now <= b.endDateRaw;
+    }).length,
     COMPLETED: bookingList.filter((b) => b.status === "COMPLETED").length,
     CANCELLED: bookingList.filter((b) => b.status === "CANCELLED").length,
   };

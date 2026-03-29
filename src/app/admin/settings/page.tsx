@@ -25,9 +25,6 @@ export default function AdminSettingsPage() {
     securityDeposit: 5000,
     lateReturnPenalty: 150,
     cancellationFee: 25,
-    weekendSurge: true,
-    holidayPricing: true,
-    autoApproveBookings: false,
     is24x7: true,
     gracePeriodMinutes: 60,
     minAdvanceBookingHours: 2,
@@ -164,36 +161,6 @@ export default function AdminSettingsPage() {
               <div className="space-y-2">
                 <Label>Cancellation Fee (%)</Label>
                 <Input type="number" value={settings.cancellationFee} onChange={(e) => updateSetting('cancellationFee', parseInt(e.target.value))} />
-              </div>
-            </div>
-            <Separator />
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Weekend Surge Pricing</p>
-                  <p className="text-xs text-muted-foreground">
-                    Apply 20% surge on Sat–Sun
-                  </p>
-                </div>
-                <Switch checked={settings.weekendSurge} onCheckedChange={(checked) => updateSetting('weekendSurge', checked)} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Holiday Pricing</p>
-                  <p className="text-xs text-muted-foreground">
-                    Apply 30% surge on public holidays
-                  </p>
-                </div>
-                <Switch checked={settings.holidayPricing} onCheckedChange={(checked) => updateSetting('holidayPricing', checked)} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Auto-approve Bookings</p>
-                  <p className="text-xs text-muted-foreground">
-                    Automatically confirm verified customer bookings
-                  </p>
-                </div>
-                <Switch checked={settings.autoApproveBookings} onCheckedChange={(checked) => updateSetting('autoApproveBookings', checked)} />
               </div>
             </div>
           </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   IndianRupee,
   TrendingUp,
@@ -32,55 +32,81 @@ import {
   Cell,
 } from "recharts";
 
-const monthlyRevenue = [
-  { month: "Mar", revenue: 145000 },
-  { month: "Apr", revenue: 168000 },
-  { month: "May", revenue: 195000 },
-  { month: "Jun", revenue: 210000 },
-  { month: "Jul", revenue: 185000 },
-  { month: "Aug", revenue: 230000 },
-  { month: "Sep", revenue: 265000 },
-  { month: "Oct", revenue: 290000 },
-  { month: "Nov", revenue: 310000 },
-  { month: "Dec", revenue: 380000 },
-  { month: "Jan", revenue: 420000 },
-  { month: "Feb", revenue: 345000 },
-];
-
-const dailyRevenue = [
-  { day: "1", revenue: 12000 },
-  { day: "3", revenue: 18000 },
-  { day: "5", revenue: 15000 },
-  { day: "7", revenue: 22000 },
-  { day: "9", revenue: 19000 },
-  { day: "11", revenue: 28000 },
-  { day: "13", revenue: 25000 },
-];
-
-const revenueByType = [
-  { name: "SUV", value: 42, color: "#3b82f6" },
-  { name: "Sedan", value: 28, color: "#8b5cf6" },
-  { name: "Luxury", value: 15, color: "#f59e0b" },
-  { name: "Hatchback", value: 10, color: "#10b981" },
-  { name: "MUV", value: 5, color: "#ef4444" },
-];
-
-const topVehicles = [
-  { name: "Hyundai Creta", bookings: 45, revenue: 135000 },
-  { name: "Toyota Fortuner", bookings: 28, revenue: 154000 },
-  { name: "Mercedes E-Class", bookings: 12, revenue: 114000 },
-  { name: "Honda City", bookings: 38, revenue: 91200 },
-  { name: "Swift Dzire", bookings: 52, revenue: 93600 },
-];
+interface RevenueData {
+  monthlyRevenue: { month: string; revenue: number }[];
+  dailyRevenue: { day: string; revenue: number }[];
+  revenueByType: { name: string; value: number; color: string }[];
+  topVehicles: { name: string; bookings: number; revenue: number }[];
+  totalRevenue: number;
+  thisMonth: number;
+  lastMonth: number;
+  avgMonthly: number;
+  avgBookingValue: number;
+  growth: string;
+  totalBookings: number;
+}
 
 export default function AdminRevenuePage() {
   const [period, setPeriod] = useState("monthly");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<RevenueData>({
+    monthlyRevenue: [],
+    dailyRevenue: [],
+    revenueByType: [],
+    topVehicles: [],
+    totalRevenue: 0,
+    thisMonth: 0,
+    lastMonth: 0,
+    avgMonthly: 0,
+    avgBookingValue: 0,
+    growth: "0",
+    totalBookings: 0,
+  });
 
-  const totalRevenue = monthlyRevenue.reduce((sum, m) => sum + m.revenue, 0);
-  const avgMonthly = Math.round(totalRevenue / 12);
-  const lastMonth = monthlyRevenue[monthlyRevenue.length - 1].revenue;
-  const prevMonth = monthlyRevenue[monthlyRevenue.length - 2].revenue;
-  const growth = (((lastMonth - prevMonth) / prevMonth) * 100).toFixed(1);
+  useEffect(() => {
+    fetchRevenueData();
+  }, []);
+
+  const fetchRevenueData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/admin/revenue");
+      if (!response.ok) throw new Error("Failed to fetch revenue data");
+      const result = await response.json();
+      setData(result);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching revenue data:", err);
+      setError("Failed to load revenue data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="text-center">
+          <div className="mb-2 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"></div>
+          <p className="text-muted-foreground">Loading revenue data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">{error}</p>
+          <Button onClick={fetchRevenueData}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { monthlyRevenue, dailyRevenue, revenueByType, topVehicles, totalRevenue, thisMonth, lastMonth, avgMonthly, avgBookingValue, growth } = data;
 
   return (
     <div>
@@ -115,7 +141,7 @@ export default function AdminRevenuePage() {
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">Total Revenue (FY)</p>
             <p className="mt-1 text-2xl font-bold">
-              ₹{(totalRevenue / 100000).toFixed(1)}L
+              ₹{totalRevenue >= 100000 ? (totalRevenue / 100000).toFixed(1) + 'L' : (totalRevenue / 1000).toFixed(0) + 'k'}
             </p>
             <div className="mt-1 flex items-center gap-1">
               <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
@@ -129,7 +155,7 @@ export default function AdminRevenuePage() {
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">This Month</p>
             <p className="mt-1 text-2xl font-bold">
-              ₹{(lastMonth / 1000).toFixed(0)}k
+              ₹{thisMonth >= 100000 ? (thisMonth / 100000).toFixed(1) + 'L' : (thisMonth / 1000).toFixed(0) + 'k'}
             </p>
             <div className="mt-1 flex items-center gap-1">
               <ArrowUpRight className={`h-3.5 w-3.5 ${Number(growth) >= 0 ? "text-green-600" : "text-red-600"}`} />
@@ -153,7 +179,7 @@ export default function AdminRevenuePage() {
         <Card className="border shadow-sm">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">Avg Booking Value</p>
-            <p className="mt-1 text-2xl font-bold">₹4,850</p>
+            <p className="mt-1 text-2xl font-bold">₹{avgBookingValue.toLocaleString('en-IN')}</p>
             <div className="mt-1 flex items-center gap-1">
               <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
               <span className="text-xs text-green-600 font-medium">

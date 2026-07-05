@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -31,18 +32,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17287035496"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'AW-17287035496');
-        </script>
-      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        {/* Razorpay Checkout */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="afterInteractive"
+        />
+
+        {/* Google Ads / gtag */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17287035496"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-ads" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17287035496');
+          `}
+        </Script>
+
         {children}
         <Toaster position="top-right" />
       </body>

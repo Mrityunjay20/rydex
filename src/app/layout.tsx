@@ -33,6 +33,14 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17287035496"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'AW-17287035496');
+        </script>
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}

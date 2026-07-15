@@ -1,7 +1,17 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
-const prisma = new (PrismaClient as any)();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const vehicles = [
   {
@@ -256,9 +266,27 @@ async function main() {
   await prisma.vehicle.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create admin user
+  // Create admin user in Supabase Auth
+  const { data: adminAuth, error: adminError } = await supabase.auth.admin.createUser({
+    email: "admin@rydex.in",
+    password: "admin123",
+    email_confirm: true,
+    user_metadata: {
+      name: "RydeX Admin",
+      role: "ADMIN",
+    },
+  });
+
+  if (adminError) {
+    console.error("Error creating admin in Supabase Auth:", adminError);
+  } else {
+    console.log(`Created admin in Supabase Auth: ${adminAuth.user.email}`);
+  }
+
+  // Create admin user in database
   const admin = await prisma.user.create({
     data: {
+      id: adminAuth.user?.id || undefined,
       name: "RydeX Admin",
       email: "admin@rydex.in",
       phone: "+91 12345 67890",
@@ -267,11 +295,29 @@ async function main() {
       verified: true,
     },
   });
-  console.log(`Created admin: ${admin.email}`);
+  console.log(`Created admin in database: ${admin.email}`);
 
-  // Create demo customer
+  // Create demo customer in Supabase Auth
+  const { data: customerAuth, error: customerError } = await supabase.auth.admin.createUser({
+    email: "rahul@example.com",
+    password: "customer123",
+    email_confirm: true,
+    user_metadata: {
+      name: "Rahul Sharma",
+      role: "CUSTOMER",
+    },
+  });
+
+  if (customerError) {
+    console.error("Error creating customer in Supabase Auth:", customerError);
+  } else {
+    console.log(`Created customer in Supabase Auth: ${customerAuth.user.email}`);
+  }
+
+  // Create demo customer in database
   const customer = await prisma.user.create({
     data: {
+      id: customerAuth.user?.id || undefined,
       name: "Rahul Sharma",
       email: "rahul@example.com",
       phone: "+91 98765 43210",
@@ -281,7 +327,7 @@ async function main() {
       verified: true,
     },
   });
-  console.log(`Created customer: ${customer.email}`);
+  console.log(`Created customer in database: ${customer.email}`);
 
   // Create vehicles
   for (const vehicle of vehicles) {

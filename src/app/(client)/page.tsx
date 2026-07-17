@@ -117,6 +117,39 @@ export default function Home() {
         </div>
       </section>
 
+      {/* CTA Section */}
+      <section className="bg-gradient-to-r from-slate-900 to-blue-950 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Ready to Hit the Road?
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-lg text-slate-300">
+            Book your ride now and experience the freedom of self-drive car
+            rentals.
+          </p>
+          <div className="mt-8 flex justify-center gap-3">
+            <Button
+              size="lg"
+              className="bg-blue-600 text-base hover:bg-blue-700"
+              asChild
+            >
+              <Link href="/vehicles">
+                Book Now
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-slate-600 bg-transparent text-white hover:bg-white/10 text-base"
+              asChild
+            >
+              <Link href="/contact">Contact Us</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section className="bg-muted/30 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -294,38 +327,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-slate-900 to-blue-950 py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Ready to Hit the Road?
-          </h2>
-          <p className="mx-auto mt-4 max-w-lg text-lg text-slate-300">
-            Book your ride now and experience the freedom of self-drive car
-            rentals.
-          </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <Button
-              size="lg"
-              className="bg-blue-600 text-base hover:bg-blue-700"
-              asChild
-            >
-              <Link href="/vehicles">
-                Book Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-slate-600 bg-transparent text-white hover:bg-white/10 text-base"
-              asChild
-            >
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      
     </>
   );
 }

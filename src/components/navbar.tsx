@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Menu, X, Car, User, LogIn, LogOut, Shield } from "lucide-react";
+import { Menu, X, User, LogIn, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/lib/constants";
@@ -43,12 +44,14 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Car className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold tracking-tight">
-            Ryde<span className="text-blue-600">X</span>
-          </span>
+          <Image 
+            src="/logo.png" 
+            alt="RYDEX" 
+            width={200} 
+            height={50}
+            className="h-14 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop Nav */}
@@ -116,12 +119,14 @@ export function Navbar() {
           <SheetContent side="right" className="w-[300px]">
             <div className="flex flex-col gap-4 pt-8">
               <Link href="/" className="flex items-center gap-2 mb-4" onClick={() => setOpen(false)}>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                  <Car className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <span className="text-xl font-bold tracking-tight">
-                  Ryde<span className="text-blue-600">X</span>
-                </span>
+                <Image 
+                  src="/logo.png" 
+                  alt="RYDEX" 
+                  width={150} 
+                  height={40}
+                  className="h-10 w-auto"
+                  priority
+                />
               </Link>
               {NAV_LINKS.map((link) => (
                 <Link

@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating vehicle:", error);
     return NextResponse.json(
-      { error: "Failed to create vehicle" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create vehicle",
+      },
       { status: 500 }
     );
   }

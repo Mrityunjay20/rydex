@@ -3,51 +3,50 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const { fileName, contentType } = await request.json();
 
-    if (!file) {
+    if (typeof fileName !== "string" || typeof contentType !== "string") {
       return NextResponse.json(
-        { error: "No file provided" },
+        { error: "File name and content type are required" },
         { status: 400 }
       );
     }
 
-    // Generate unique filename
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `vehicles/${fileName}`;
+    if (!contentType.startsWith("image/")) {
+      return NextResponse.json(
+        { error: "Only image files are supported" },
+        { status: 400 }
+      );
+    }
 
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const extension = fileName.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "jpg";
+    const filePath = `vehicles/${crypto.randomUUID()}.${extension}`;
 
-    // Upload to Supabase storage
     const { data, error } = await supabaseAdmin.storage
       .from("vehicle-images")
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+      .createSignedUploadUrl(filePath);
 
     if (error) {
-      console.error("Upload error:", error);
+      console.error("Failed to create vehicle-image upload URL:", error);
       return NextResponse.json(
-        { error: "Failed to upload image" },
+        { error: "Failed to prepare image upload" },
         { status: 500 }
       );
     }
 
-    // Get public URL
     const { data: { publicUrl } } = supabaseAdmin.storage
       .from("vehicle-images")
       .getPublicUrl(filePath);
 
-    return NextResponse.json({ url: publicUrl });
+    return NextResponse.json({
+      path: filePath,
+      token: data.token,
+      url: publicUrl,
+    });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("Failed to prepare vehicle-image upload:", error);
     return NextResponse.json(
-      { error: "Failed to upload image" },
+      { error: "Failed to prepare image upload" },
       { status: 500 }
     );
   }

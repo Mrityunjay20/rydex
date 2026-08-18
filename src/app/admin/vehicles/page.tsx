@@ -38,8 +38,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { vehicles as allVehicles } from "@/lib/mock-data";
 import { VEHICLE_TYPES, FUEL_TYPES, TRANSMISSION_TYPES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminVehiclesPage() {
   const [search, setSearch] = useState("");
@@ -186,19 +186,32 @@ export default function AdminVehiclesPage() {
 
       // Upload image if file is selected
       if (imageFile) {
-        const formDataImage = new FormData();
-        formDataImage.append("file", imageFile);
-
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
-          body: formDataImage,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: imageFile.name,
+            contentType: imageFile.type,
+          }),
         });
 
         if (!uploadResponse.ok) {
-          throw new Error("Failed to upload image");
+          const { error } = await uploadResponse.json();
+          throw new Error(error || "Failed to prepare image upload");
         }
 
         const uploadData = await uploadResponse.json();
+        const { error: storageError } = await createClient()
+          .storage
+          .from("vehicle-images")
+          .uploadToSignedUrl(uploadData.path, uploadData.token, imageFile, {
+            contentType: imageFile.type,
+          });
+
+        if (storageError) {
+          throw new Error(storageError.message || "Failed to upload image");
+        }
+
         imageUrl = uploadData.url;
       }
 
@@ -221,7 +234,10 @@ export default function AdminVehiclesPage() {
       });
 
       if (!response.ok) {
-        throw new Error(editingVehicle ? "Failed to update vehicle" : "Failed to create vehicle");
+        const { error } = await response.json();
+        throw new Error(
+          error || (editingVehicle ? "Failed to update vehicle" : "Failed to create vehicle")
+        );
       }
 
       await response.json();
@@ -251,7 +267,7 @@ export default function AdminVehiclesPage() {
       alert(editingVehicle ? "Vehicle updated successfully!" : "Vehicle added successfully!");
     } catch (error) {
       console.error("Error creating vehicle:", error);
-      alert("Failed to add vehicle. Please try again.");
+      alert(error instanceof Error ? error.message : "Failed to add vehicle. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

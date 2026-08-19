@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Failed to create vehicle-image upload URL:", error);
       return NextResponse.json(
-        { error: "Failed to prepare image upload" },
+        { error: `Failed to prepare image upload: ${error.message}` },
         { status: 500 }
       );
     }
@@ -46,7 +46,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Failed to prepare vehicle-image upload:", error);
     return NextResponse.json(
-      { error: "Failed to prepare image upload" },
+      {
+        error:
+          error instanceof Error
+            ? `Failed to prepare image upload: ${error.message}`
+            : "Failed to prepare image upload",
+      },
       { status: 500 }
     );
   }
